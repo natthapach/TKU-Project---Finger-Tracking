@@ -7,17 +7,19 @@
 
 using namespace std;
 
-Application::Application(std::shared_ptr<Activator> activator)	: mainFrameActivator(activator)
+Application::Application(map<string, shared_ptr<Activator>> mainFrameActivators) : mainFrameActivators(mainFrameActivators)
 {
 
 }
 
-void Application::onInitial(std::string window_name)
+void Application::onInitial()
 {
-	cv::namedWindow(window_name, cv::WINDOW_NORMAL);
-	windowName = window_name;
-
-	for (std::vector<std::shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
+	
+	for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
+		cv::namedWindow(it->first, cv::WINDOW_NORMAL);
+	}
+	
+	for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
 		(*it)->onInitial();
 	}
 }
@@ -27,36 +29,43 @@ int Application::start()
 	// Life Cycle Loop
 	while (true) {
 		// onPrepare
-		for (std::vector<std::shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
+		for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
 			(*it)->onPrepare();
 		}
 
 		// onReadFrame
-		for (std::vector<std::shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
+		for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
 			(*it)->onReadFrame();
 		}
 
 		// onModifyFrame
-		for (std::vector<std::shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
+		for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
 			(*it)->onModifyFrame();
 		}
 
-		imageFrame = mainFrameActivator->getImageFrame();
-
-
-		// onDraw
-		for (std::vector<std::shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
-			(*it)->onDraw(imageFrame);
+		for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
+			imageFrames[it->first] = it->second->getImageFrame();
 		}
 
-		cv::imshow(windowName, imageFrame);
+		// onDraw
+		for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
+			for (map<string, shared_ptr<Activator>>::iterator it2 = mainFrameActivators.begin(); it2 != mainFrameActivators.end(); ++it2) {
+				(*it)->onDraw(it2->first, imageFrames[it2->first]);
+			}
+		}
+
+		for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
+			cv::imshow(it->first, imageFrames[it->first]);
+		}
+
+		
 
 		int key = cv::waitKey(5);
 		if ((*onKeybordCallback)(key) != 0 ){
 			break;
 		}
 
-		for (std::vector<std::shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
+		for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
 			(*it)->onPerformKeyboardEvent(key);
 		}
 	}
@@ -67,16 +76,11 @@ int Application::start()
 	return 0;
 }
 
-void Application::registerActivator(std::shared_ptr<Activator> activator)
+void Application::registerActivator(shared_ptr<Activator> activator)
 {
 	activators.push_back(activator);
 }
 
-void Application::setMainFrameActivator(std::shared_ptr<Activator> activator)
-{
-	cout << "set main frame Activator " << activator->getName() << endl; 
-	mainFrameActivator = activator;
-}
 
 void Application::setOnKeyboardCallback(int(*callback)(int key))
 {

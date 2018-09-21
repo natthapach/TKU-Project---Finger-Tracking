@@ -12,7 +12,7 @@ public:
 	void onPrepare();
 	void onReadFrame();
 	void onModifyFrame();
-	void onDraw(cv::Mat canvas);
+	void onDraw(std::string name, cv::Mat canvas);
 	void onPerformKeyboardEvent(int key);
 	void onDie();
 	cv::Mat getImageFrame();

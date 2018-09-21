@@ -4,20 +4,19 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
 
+using namespace std;
+
 class Application {
 public:
-	Application(std::shared_ptr<Activator> activator);
-	void onInitial(std::string windowName);
+	Application(map<string, shared_ptr<Activator>> mainFrameActivators);
+	void onInitial();
 	int start();
-	void registerActivator(std::shared_ptr<Activator> activator);
-	void setMainFrameActivator(std::shared_ptr<Activator> activator);
+	void registerActivator(shared_ptr<Activator> activator);
 	void setOnKeyboardCallback(int (*callback)(int key));
 private:
-	std::vector<std::shared_ptr<Activator>> activators;
-	std::shared_ptr<Activator> mainFrameActivator;
-	cv::Mat imageFrame;
-	std::string windowName;
-	std::vector<std::string> windowNames;
+	vector<shared_ptr<Activator>> activators;
+	map<string, cv::Mat> imageFrames;
+	map<string, shared_ptr<Activator>> mainFrameActivators;		// { window_name : Activator }
 
 	int (*onKeybordCallback)(int key);
 	void onDie();

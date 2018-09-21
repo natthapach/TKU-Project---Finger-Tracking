@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include <OpenNI.h>
 #include <NiTE.h>
+using namespace std;
 
 DepthActivator::DepthActivator()
 {
@@ -69,7 +70,7 @@ void DepthActivator::onModifyFrame()
 {
 }
 
-void DepthActivator::onDraw(cv::Mat canvas)
+void DepthActivator::onDraw(string name, cv::Mat canvas)
 {
 	//cv::rectangle(canvas, cv::Rect(55, 60, 10, 10), cv::Scalar(0, 0, 255), -1, cv::LINE_8);
 	//cv::rectangle(canvas, cv::Rect(600, 470, 10, 10), cv::Scalar(0, 0, 255), -1, cv::LINE_8);

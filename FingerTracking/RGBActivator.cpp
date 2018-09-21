@@ -73,7 +73,7 @@ void RGBActivator::onModifyFrame()
 {
 }
 
-void RGBActivator::onDraw(cv::Mat canvas)
+void RGBActivator::onDraw(string name, cv::Mat canvas)
 {
 }
 
@@ -87,7 +87,6 @@ void RGBActivator::onDie()
 
 cv::Mat RGBActivator::getImageFrame()
 {
-	std::cout << "rgb get frame\n";
 	return cv::Mat(480, 640, CV_8UC3, &img);
 }
 
