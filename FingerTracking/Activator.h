@@ -13,4 +13,5 @@ public:
 	virtual cv::Mat getImageFrame() = 0;
 	virtual std::string getName() = 0;
 	std::string name;
+	
 };
