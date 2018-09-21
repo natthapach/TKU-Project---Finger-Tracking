@@ -3,8 +3,6 @@ c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\appli
   c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\application.cpp(118): note: consider using '%lld' in the format string
   c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\application.cpp(118): note: consider using '%Id' in the format string
   c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\application.cpp(118): note: consider using '%I64d' in the format string
-  FingerTracking.cpp
-  Generating Code...
   FingerTracking.vcxproj -> C:\Users\PRIALAB\source\repos\TKU-Project---Finger-Tracking\x64\Debug\FingerTracking.exe
   0 File(s) copied
   0 File(s) copied

@@ -127,6 +127,9 @@ void Application::startWriteVideo()
 void Application::stopWriteVideo()
 {
 	isWriteVideo = false;
+	for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
+		videoWriters[it->first].release();
+	}
 	cout << "Stop writing video" << endl;
 }
 
