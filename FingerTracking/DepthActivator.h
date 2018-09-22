@@ -24,18 +24,24 @@ public:
 	void toggleEnableHandThreshold();
 	void toggleEnableDrawHandPoint();
 protected:
+	const int RANGE = 50;
 	uchar img[480][640][3];
+	cv::Mat imageFrame;
+
+	nite::HandTrackerFrameRef handsFrame;
 	nite::HandTracker handTracker;
 	int handDepth = 0;
 	int numberOfHands = 0;
+	float handPosX = 0;
+	float handPosY = 0;
 	int depthHistogram[65536];
-	const int RANGE = 50;
-	nite::HandTrackerFrameRef handsFrame;
 private:
-	
+	// Flag
 	bool enableHandTracking = true;
 	bool enableHandThreshold = false;
 	bool enableDrawHandPoint = false;
+	bool markMode = true;
+
 	void calDepthHistogram(openni::VideoFrameRef depthFrame, int* numberOfPoints, int* numberOfHandPoints);
 	void modifyImage(openni::VideoFrameRef depthFrame, int numberOfPoints, int numberOfHandPoints);
 	void settingHandValue();

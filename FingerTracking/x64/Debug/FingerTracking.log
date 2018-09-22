@@ -1,8 +1,6 @@
-﻿  Application.cpp
-c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\application.cpp(118): warning C4477: 'sprintf_s' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'time_t'
-  c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\application.cpp(118): note: consider using '%lld' in the format string
-  c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\application.cpp(118): note: consider using '%Id' in the format string
-  c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\application.cpp(118): note: consider using '%I64d' in the format string
-  FingerTracking.vcxproj -> C:\Users\PRIALAB\source\repos\TKU-Project---Finger-Tracking\x64\Debug\FingerTracking.exe
+﻿  DepthActivator.cpp
+e:\projects\computer vision\tku-project---finger-tracking\fingertracking\depthactivator.cpp(80): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+e:\projects\computer vision\tku-project---finger-tracking\fingertracking\depthactivator.cpp(81): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+  FingerTracking.vcxproj -> E:\Projects\Computer Vision\TKU-Project---Finger-Tracking\x64\Debug\FingerTracking.exe
   0 File(s) copied
   0 File(s) copied

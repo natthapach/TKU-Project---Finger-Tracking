@@ -68,6 +68,27 @@ void DepthActivator::onReadFrame()
 
 void DepthActivator::onModifyFrame()
 {
+	imageFrame = cv::Mat(480, 640, CV_8UC3, &img);
+	if (numberOfHands <= 0)
+		return;
+
+	cv::Mat gray;
+	cv::cvtColor(imageFrame, gray, cv::COLOR_BGR2GRAY);
+
+	// make sure Seed Point (hand point) belong to hand region
+	int smallKernel = 3;
+	for (int y = handPosY-smallKernel; y < handPosY+smallKernel; y++) {
+		for (int x = handPosX-smallKernel; x < handPosX+smallKernel; x++) {
+			gray.at<uchar>(y, x) = 128;
+		}
+	}
+
+	cv::Mat mask(480+2, 640+2, CV_8UC3, cv::Scalar(0));
+	cv::floodFill(gray, cv::Point((int)handPosX, (int)handPosY), cv::Scalar(255));
+	cv::threshold(gray, gray, 129, 255, cv::THRESH_BINARY);
+	//cv::Mat flooded;
+	//cv::threshold(gray, flooded, 129, 255, cv::THRESH_BINARY);
+	imageFrame = gray;
 }
 
 void DepthActivator::onDraw(string name, cv::Mat canvas)
@@ -123,7 +144,7 @@ void DepthActivator::onDie()
 
 cv::Mat DepthActivator::getImageFrame()
 {
-	return cv::Mat(480, 640, CV_8UC3, &img);
+	return imageFrame;
 }
 
 std::string DepthActivator::getName()
@@ -203,15 +224,29 @@ void DepthActivator::modifyImage(openni::VideoFrameRef depthFrame, int numberOfP
 
 			if (handDepth != 0 && numberOfHands > 0 && enableHandThreshold) {
 				if (depthPixel != 0 && (handDepth-RANGE <= *depthPixel && *depthPixel <= handDepth + RANGE)) {
-					uchar depthValue = (uchar)(((float)depthHistogram[*depthPixel] / numberOfHandPoints) * 255);
-					img[y][x][0] = 255 - depthValue;
-					img[y][x][1] = 255 - depthValue;
-					img[y][x][2] = 255 - depthValue;
+					if (markMode) {
+						img[y][x][0] = 128;
+						img[y][x][1] = 128;
+						img[y][x][2] = 128;
+					}
+					else {
+						uchar depthValue = (uchar)(((float)depthHistogram[*depthPixel] / numberOfHandPoints) * 255);
+						img[y][x][0] = 255 - depthValue;
+						img[y][x][1] = 255 - depthValue;
+						img[y][x][2] = 255 - depthValue;
+					}
 				}
 				else {
-					img[y][x][0] = 0;
-					img[y][x][1] = 255;
-					img[y][x][2] = 0;
+					if (markMode) {
+						img[y][x][0] = 0;
+						img[y][x][1] = 0;
+						img[y][x][2] = 0;
+					}
+					else {
+						img[y][x][0] = 0;
+						img[y][x][1] = 255;
+						img[y][x][2] = 0;
+					}
 				}
 			}
 			else {
@@ -247,6 +282,8 @@ void DepthActivator::settingHandValue()
 				hand.getPosition().z,
 				&x, &y
 			);
+			handPosX = x;
+			handPosY = y;
 			openni::VideoFrameRef depthFrame = handsFrame.getDepthFrame();
 			openni::DepthPixel* depthPixel = (openni::DepthPixel*) ((char*)depthFrame.getData() + ((int)y * depthFrame.getStrideInBytes())) + (int)x;
 			handDepth = *depthPixel;
