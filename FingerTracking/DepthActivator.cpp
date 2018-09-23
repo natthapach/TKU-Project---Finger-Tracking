@@ -82,13 +82,31 @@ void DepthActivator::onModifyFrame()
 			gray.at<uchar>(y, x) = 128;
 		}
 	}
-
-	cv::Mat mask(480+2, 640+2, CV_8UC3, cv::Scalar(0));
 	cv::floodFill(gray, cv::Point((int)handPosX, (int)handPosY), cv::Scalar(255));
 	cv::threshold(gray, gray, 129, 255, cv::THRESH_BINARY);
-	//cv::Mat flooded;
-	//cv::threshold(gray, flooded, 129, 255, cv::THRESH_BINARY);
-	imageFrame = gray;
+
+	vector<vector<cv::Point>> contours;
+	vector<cv::Vec4i> hierarchy;
+	cv::findContours(gray, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+	
+	vector<vector<cv::Point>> hull(contours.size());
+	cv::Mat hullMat = cv::Mat::zeros(gray.size(), CV_8UC3);
+	for (int i = 0; i < contours.size(); i++) {
+		cv::convexHull(cv::Mat(contours[i]), hull[i]);
+	}
+
+	cv::Mat drawing = cv::Mat::zeros(gray.size(), CV_8UC3);
+	cv::Mat hullArea = cv::Mat::zeros(gray.size(), CV_8UC3);
+	for (int i = 0; i < contours.size(); i++) {
+		cv::drawContours(drawing, contours, i, cv::Scalar(0, 255, 0), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
+		cv::drawContours(drawing, hull, i, cv::Scalar(0, 255, 255), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
+	}
+	/*for (int i = 0; i < hull.size(); i++) {
+		for (int j = 0; j < hull[i].size(); j++) {
+			cv::circle(drawing, hull[i][j], 2, cv::Scalar(0, 0, 255), -1, 8);
+		}
+	}*/
+	imageFrame = hullArea;
 }
 
 void DepthActivator::onDraw(string name, cv::Mat canvas)
