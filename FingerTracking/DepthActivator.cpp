@@ -84,10 +84,13 @@ void DepthActivator::onModifyFrame()
 	}
 	cv::floodFill(gray, cv::Point((int)handPosX, (int)handPosY), cv::Scalar(255));
 	cv::threshold(gray, gray, 129, 255, cv::THRESH_BINARY);
-
+	
+	// find contours
 	vector<vector<cv::Point>> contours;
 	vector<cv::Vec4i> hierarchy;
 	cv::findContours(gray, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+	
+	// find largest contour
 	double maxArea = 0;
 	int maxIndex = 0;
 	vector<cv::Point> largestContour;
@@ -100,19 +103,75 @@ void DepthActivator::onModifyFrame()
 	}
 	largestContour = contours[maxIndex];
 
+	// find convex hull of largest contour
 	vector<vector<cv::Point>> largestHull(1);
+	vector<vector<int>> largestHullI(1);
 	cv::convexHull(cv::Mat(largestContour), largestHull[0]);
+	cv::convexHull(cv::Mat(largestContour), largestHullI[0]);
+
+	vector<vector<cv::Vec4i>> defects(1);
+	cv::convexityDefects(largestContour, largestHullI[0], defects[0]);
 
 	cv::Mat drawing = cv::Mat::zeros(gray.size(), CV_8UC3);
 	for (int i = 0; i < contours.size(); i++) {
 		cv::drawContours(drawing, contours, i, cv::Scalar(0, 255, 0), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
 	}
 	cv::drawContours(drawing, largestHull, 0, cv::Scalar(0, 255, 255), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
-	for (int i = 0; i < largestHull.size(); i++) {
-		for (int j = 0; j < largestHull[i].size(); j++) {
-			cv::circle(drawing, largestHull[i][j], 2, cv::Scalar(0, 0, 255), -1, 8);
+	for (int j = 0; j < largestHull[0].size(); j++) {
+		cv::circle(drawing, largestHull[0][j], 2, cv::Scalar(0, 0, 255), -1, 8);
+	}
+	cout << "finded " << largestHull[0].size() << "hull point" << endl;
+
+	/*vector<vector<double>> distMat(largestHull[0].size());
+	for (int i = 0; i < distMat.size(); i++) {
+		cv::Point pi = largestHull[0][i];
+		distMat[i] = vector<double>(largestHull[0].size());
+
+		for (int j = i+1; j < distMat[i].size(); j++) {
+			cv::Point pj = largestHull[0][j];
+			distMat[i][j] = sqrt(pow(pi.x - pj.x, 2) + pow(pi.y - pj.y, 2));
 		}
 	}
+	double thresholdDist = 200;
+	vector<int> cluster(distMat.size(), 0);
+	int clusterCount = 1;
+	for (int i = 0; i < distMat.size(); i++) {
+		for (int j = i + 1; j < distMat[i].size(); j++) {
+			if (distMat[i][j] > thresholdDist) {
+				if (cluster[i] == 0 && cluster[j] == 0) {
+					cluster[i] = clusterCount;
+					cluster[j] = clusterCount;
+					clusterCount++;
+				}
+				else if (cluster[i] == 0) {
+					cluster[i] = cluster[j];
+				}
+				else {
+					cluster[j] = cluster[i];
+				}
+			}
+		}
+	}
+	int m = cluster.size();*/
+
+	//for (int i = 0; i < defects[0].size(); i++) {
+	//	const cv::Vec4i& v = defects[0][i];
+	//	float depth = v[3];		// depth value
+	//	if (depth < 500) {
+	//		int startIndex = v[0];
+	//		int endIndex = v[1];
+	//		int farIndex = v[2];
+	//		cv::Point ptStart(largestContour[startIndex]);
+	//		cv::Point ptEnd(largestContour[endIndex]);
+	//		cv::Point ptFar(largestContour[farIndex]);
+
+	//		cv::line(drawing, ptStart, ptEnd, cv::Scalar(255, 0, 0), 1);
+	//		cv::line(drawing, ptStart, ptFar, cv::Scalar(255, 0, 0), 1);
+	//		cv::line(drawing, ptEnd, ptFar, cv::Scalar(255, 0, 0), 1);
+	//		cv::circle(drawing, ptFar, 4, cv::Scalar(255, 0, 0), 2);
+	//		cout << "convex depth " << depth << endl;
+	//	}
+	//}
 	imageFrame = drawing;
 }
 
