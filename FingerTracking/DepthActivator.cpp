@@ -88,25 +88,32 @@ void DepthActivator::onModifyFrame()
 	vector<vector<cv::Point>> contours;
 	vector<cv::Vec4i> hierarchy;
 	cv::findContours(gray, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
-	
-	vector<vector<cv::Point>> hull(contours.size());
-	cv::Mat hullMat = cv::Mat::zeros(gray.size(), CV_8UC3);
+	double maxArea = 0;
+	int maxIndex = 0;
+	vector<cv::Point> largestContour;
 	for (int i = 0; i < contours.size(); i++) {
-		cv::convexHull(cv::Mat(contours[i]), hull[i]);
+		double a = cv::contourArea(contours[i], false);
+		if (a > maxArea) {
+			maxArea = a;
+			maxIndex = i;
+		}
 	}
+	largestContour = contours[maxIndex];
+
+	vector<vector<cv::Point>> largestHull(1);
+	cv::convexHull(cv::Mat(largestContour), largestHull[0]);
 
 	cv::Mat drawing = cv::Mat::zeros(gray.size(), CV_8UC3);
-	cv::Mat hullArea = cv::Mat::zeros(gray.size(), CV_8UC3);
 	for (int i = 0; i < contours.size(); i++) {
 		cv::drawContours(drawing, contours, i, cv::Scalar(0, 255, 0), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
-		cv::drawContours(drawing, hull, i, cv::Scalar(0, 255, 255), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
 	}
-	/*for (int i = 0; i < hull.size(); i++) {
-		for (int j = 0; j < hull[i].size(); j++) {
-			cv::circle(drawing, hull[i][j], 2, cv::Scalar(0, 0, 255), -1, 8);
+	cv::drawContours(drawing, largestHull, 0, cv::Scalar(0, 255, 255), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
+	for (int i = 0; i < largestHull.size(); i++) {
+		for (int j = 0; j < largestHull[i].size(); j++) {
+			cv::circle(drawing, largestHull[i][j], 2, cv::Scalar(0, 0, 255), -1, 8);
 		}
-	}*/
-	imageFrame = hullArea;
+	}
+	imageFrame = drawing;
 }
 
 void DepthActivator::onDraw(string name, cv::Mat canvas)
