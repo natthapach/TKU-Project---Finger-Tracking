@@ -118,11 +118,11 @@ void DepthActivator::onModifyFrame()
 	}
 	cv::drawContours(drawing, largestHull, 0, cv::Scalar(0, 255, 255), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
 	for (int j = 0; j < largestHull[0].size(); j++) {
-		cv::circle(drawing, largestHull[0][j], 2, cv::Scalar(0, 0, 255), -1, 8);
+		//cv::circle(drawing, largestHull[0][j], 2, cv::Scalar(0, 0, 255), -1, 8);
 	}
 	cout << "finded " << largestHull[0].size() << "hull point" << endl;
 
-	/*vector<vector<double>> distMat(largestHull[0].size());
+	vector<vector<double>> distMat(largestHull[0].size());
 	for (int i = 0; i < distMat.size(); i++) {
 		cv::Point pi = largestHull[0][i];
 		distMat[i] = vector<double>(largestHull[0].size());
@@ -132,12 +132,12 @@ void DepthActivator::onModifyFrame()
 			distMat[i][j] = sqrt(pow(pi.x - pj.x, 2) + pow(pi.y - pj.y, 2));
 		}
 	}
-	double thresholdDist = 200;
+	double thresholdDist = 10;
 	vector<int> cluster(distMat.size(), 0);
 	int clusterCount = 1;
 	for (int i = 0; i < distMat.size(); i++) {
 		for (int j = i + 1; j < distMat[i].size(); j++) {
-			if (distMat[i][j] > thresholdDist) {
+			if (distMat[i][j] < thresholdDist) {
 				if (cluster[i] == 0 && cluster[j] == 0) {
 					cluster[i] = clusterCount;
 					cluster[j] = clusterCount;
@@ -152,7 +152,31 @@ void DepthActivator::onModifyFrame()
 			}
 		}
 	}
-	int m = cluster.size();*/
+	for (int i = 0; i < cluster.size(); i++) {
+		if (cluster[i] == 0) {
+			cluster[i] = clusterCount;
+			clusterCount++;
+		}
+	}
+	int m = cluster.size();
+	for (int i = 1; i < m - 1; i++) {
+		double x_sum = 0;
+		double y_sum = 0;
+		int x_count = 0;
+		int y_count = 0;
+		for (int j = 0; j < largestHull[0].size(); j++) {
+			if (cluster[j] == i) {
+				x_sum += largestHull[0][j].x;
+				y_sum += largestHull[0][j].y;
+				y_count++;
+				x_count++;
+			}
+		}
+		cv::circle(drawing, cv::Point((int)(x_sum/x_count), (int)(y_sum/y_count)), 4, cv::Scalar(255, 255, 255), 2, 8);
+	}
+	//if (clusterCount > 0) {
+		
+	//}
 
 	//for (int i = 0; i < defects[0].size(); i++) {
 	//	const cv::Vec4i& v = defects[0][i];
