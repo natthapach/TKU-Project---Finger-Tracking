@@ -2,6 +2,7 @@
 #include "DepthActivator.h"
 
 #include <stdio.h>
+#include <math.h>
 #include <opencv2/opencv.hpp>
 #include <OpenNI.h>
 #include <NiTE.h>
@@ -63,18 +64,21 @@ void DepthActivator::onReadFrame()
 	calDepthHistogram(depthFrame, &numberOfPoints, &numberOfHandPoints);
 	modifyImage(depthFrame, numberOfPoints, numberOfHandPoints);
 	
+	imageFrame = cv::Mat(480, 640, CV_8UC3, &img);
+	maskFrame = cv::Mat(480, 640, CV_8UC1, &mask);
 	settingHandValue();
 }
 
 void DepthActivator::onModifyFrame()
 {
-	imageFrame = cv::Mat(480, 640, CV_8UC3, &img);
+	//imageFrame = cv::Mat(480, 640, CV_8UC3, &img);
 	if (numberOfHands <= 0)
 		return;
 
-	cv::Mat gray;
-	cv::cvtColor(imageFrame, gray, cv::COLOR_BGR2GRAY);
+	/*cv::Mat gray;
+	cv::cvtColor(imageFrame, gray, cv::COLOR_BGR2GRAY);*/
 
+	cv::Mat gray = maskFrame;
 	// make sure Seed Point (hand point) belong to hand region
 	int smallKernel = 3;
 	for (int y = handPosY-smallKernel; y < handPosY+smallKernel; y++) {
@@ -86,14 +90,12 @@ void DepthActivator::onModifyFrame()
 	cv::threshold(gray, gray, 129, 255, cv::THRESH_BINARY);
 	
 	// find contours
-	vector<vector<cv::Point>> contours;
 	vector<cv::Vec4i> hierarchy;
 	cv::findContours(gray, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 	
 	// find largest contour
 	double maxArea = 0;
 	int maxIndex = 0;
-	vector<cv::Point> largestContour;
 	for (int i = 0; i < contours.size(); i++) {
 		double a = cv::contourArea(contours[i], false);
 		if (a > maxArea) {
@@ -104,40 +106,70 @@ void DepthActivator::onModifyFrame()
 	largestContour = contours[maxIndex];
 
 	// find convex hull of largest contour
-	vector<vector<cv::Point>> largestHull(1);
-	vector<vector<int>> largestHullI(1);
-	cv::convexHull(cv::Mat(largestContour), largestHull[0]);
-	cv::convexHull(cv::Mat(largestContour), largestHullI[0]);
-
-	vector<vector<cv::Vec4i>> defects(1);
-	cv::convexityDefects(largestContour, largestHullI[0], defects[0]);
+	cv::convexHull(cv::Mat(largestContour), largestHull);
+	
+	// find convexity defect
+	vector<int> largestHull_I;
+	cv::convexHull(cv::Mat(largestContour), largestHull_I);
+	vector<cv::Vec4i> defects;
+	cv::convexityDefects(largestContour, largestHull_I, defects);
 
 	cv::Mat drawing = cv::Mat::zeros(gray.size(), CV_8UC3);
-	for (int i = 0; i < contours.size(); i++) {
-		cv::drawContours(drawing, contours, i, cv::Scalar(0, 255, 0), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
-	}
-	cv::drawContours(drawing, largestHull, 0, cv::Scalar(0, 255, 255), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
-	for (int j = 0; j < largestHull[0].size(); j++) {
-		//cv::circle(drawing, largestHull[0][j], 2, cv::Scalar(0, 0, 255), -1, 8);
-	}
-	cout << "finded " << largestHull[0].size() << "hull point" << endl;
 
-	vector<vector<double>> distMat(largestHull[0].size());
+	vector<cv::Point> convexPoint;
+
+	for (int i = 0; i < defects.size(); i++) {
+		cv::Vec4i& v = defects[i];
+		float depth = v[3];
+		if (depth > 10) {
+			int startIndex = v[0];
+			int endIndex = v[1];
+			int farIndex = v[2];
+
+			cv::Point startPoint(largestContour[startIndex]);
+			cv::Point endPoint(largestContour[endIndex]);
+			cv::Point farPoint(largestContour[farIndex]);
+
+			double ms = ((double)(startPoint.y - farPoint.y)) / (startPoint.x - farPoint.x);
+			double me = ((double)(endPoint.y - farPoint.y)) / (endPoint.x - farPoint.x);
+			double angle = atan((me - ms) / (1 + (ms * me))) * (180/3.14159265);
+			cout << "angle " << angle << endl;
+			cv::line(drawing, startPoint, endPoint, cv::Scalar(255, 255, 255), 1);
+			cv::line(drawing, startPoint, farPoint, cv::Scalar(255, 255, 255), 1);
+			cv::line(drawing, endPoint, farPoint, cv::Scalar(255, 255, 255), 1);
+
+			if (angle < 0) {
+				cv::circle(drawing, farPoint, 4, cv::Scalar(0, 0, 255), 2);
+				//cv::circle(drawing, startPoint, 4, cv::Scalar(0, 255, 0), 2);
+				//cv::circle(drawing, endPoint, 4, cv::Scalar(0, 255, 0), 2);
+				convexPoint.push_back(startPoint);
+				convexPoint.push_back(endPoint);
+			}
+			/*else 
+				cv::circle(drawing, farPoint, 4, cv::Scalar(255, 255, 255), 2);*/
+		}
+	}
+
+
+	
+	cv::drawContours(drawing, vector<vector<cv::Point>>{ largestContour }, 0, cv::Scalar(0, 255, 0), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
+
+	vector<cv::Point> clusterInput = convexPoint;
+	vector<vector<double>> distMat(clusterInput.size());
 	for (int i = 0; i < distMat.size(); i++) {
-		cv::Point pi = largestHull[0][i];
-		distMat[i] = vector<double>(largestHull[0].size());
+		cv::Point pi = clusterInput[i];
+		distMat[i] = vector<double>(clusterInput.size());
 
 		for (int j = i+1; j < distMat[i].size(); j++) {
-			cv::Point pj = largestHull[0][j];
+			cv::Point pj = clusterInput[j];
 			distMat[i][j] = sqrt(pow(pi.x - pj.x, 2) + pow(pi.y - pj.y, 2));
 		}
 	}
-	double thresholdDist = 10;
 	vector<int> cluster(distMat.size(), 0);
 	int clusterCount = 1;
 	for (int i = 0; i < distMat.size(); i++) {
 		for (int j = i + 1; j < distMat[i].size(); j++) {
-			if (distMat[i][j] < thresholdDist) {
+			if (distMat[i][j] < DISTANCE_THRESHOLD) {
 				if (cluster[i] == 0 && cluster[j] == 0) {
 					cluster[i] = clusterCount;
 					cluster[j] = clusterCount;
@@ -164,38 +196,16 @@ void DepthActivator::onModifyFrame()
 		double y_sum = 0;
 		int x_count = 0;
 		int y_count = 0;
-		for (int j = 0; j < largestHull[0].size(); j++) {
+		for (int j = 0; j < clusterInput.size(); j++) {
 			if (cluster[j] == i) {
-				x_sum += largestHull[0][j].x;
-				y_sum += largestHull[0][j].y;
+				x_sum += clusterInput[j].x;
+				y_sum += clusterInput[j].y;
 				y_count++;
 				x_count++;
 			}
 		}
-		cv::circle(drawing, cv::Point((int)(x_sum/x_count), (int)(y_sum/y_count)), 4, cv::Scalar(255, 255, 255), 2, 8);
+		cv::circle(drawing, cv::Point((int)(x_sum/x_count), (int)(y_sum/y_count)), 4, cv::Scalar(255, 255, 255), -1, 8);
 	}
-	//if (clusterCount > 0) {
-		
-	//}
-
-	//for (int i = 0; i < defects[0].size(); i++) {
-	//	const cv::Vec4i& v = defects[0][i];
-	//	float depth = v[3];		// depth value
-	//	if (depth < 500) {
-	//		int startIndex = v[0];
-	//		int endIndex = v[1];
-	//		int farIndex = v[2];
-	//		cv::Point ptStart(largestContour[startIndex]);
-	//		cv::Point ptEnd(largestContour[endIndex]);
-	//		cv::Point ptFar(largestContour[farIndex]);
-
-	//		cv::line(drawing, ptStart, ptEnd, cv::Scalar(255, 0, 0), 1);
-	//		cv::line(drawing, ptStart, ptFar, cv::Scalar(255, 0, 0), 1);
-	//		cv::line(drawing, ptEnd, ptFar, cv::Scalar(255, 0, 0), 1);
-	//		cv::circle(drawing, ptFar, 4, cv::Scalar(255, 0, 0), 2);
-	//		cout << "convex depth " << depth << endl;
-	//	}
-	//}
 	imageFrame = drawing;
 }
 
@@ -329,45 +339,25 @@ void DepthActivator::modifyImage(openni::VideoFrameRef depthFrame, int numberOfP
 		for (unsigned int x = 0; x < 640; x++) {
 			openni::DepthPixel* depthPixel = (openni::DepthPixel*)
 				((char*)depthFrame.getData() + (y*depthFrame.getStrideInBytes())) + x;
-
-			if (handDepth != 0 && numberOfHands > 0 && enableHandThreshold) {
-				if (depthPixel != 0 && (handDepth-RANGE <= *depthPixel && *depthPixel <= handDepth + RANGE)) {
-					if (markMode) {
-						img[y][x][0] = 128;
-						img[y][x][1] = 128;
-						img[y][x][2] = 128;
-					}
-					else {
-						uchar depthValue = (uchar)(((float)depthHistogram[*depthPixel] / numberOfHandPoints) * 255);
-						img[y][x][0] = 255 - depthValue;
-						img[y][x][1] = 255 - depthValue;
-						img[y][x][2] = 255 - depthValue;
-					}
-				}
-				else {
-					if (markMode) {
-						img[y][x][0] = 0;
-						img[y][x][1] = 0;
-						img[y][x][2] = 0;
-					}
-					else {
-						img[y][x][0] = 0;
-						img[y][x][1] = 255;
-						img[y][x][2] = 0;
-					}
-				}
+			
+			if (*depthPixel != 0) {
+				uchar depthValue = (uchar)(((float)depthHistogram[*depthPixel] / numberOfPoints) * 255);
+				img[y][x][0] = 255 - depthValue;
+				img[y][x][1] = 255 - depthValue;
+				img[y][x][2] = 255 - depthValue;
 			}
 			else {
-				if (*depthPixel != 0) {
-					uchar depthValue = (uchar)(((float)depthHistogram[*depthPixel] / numberOfPoints) * 255);
-					img[y][x][0] = 255 - depthValue;
-					img[y][x][1] = 255 - depthValue;
-					img[y][x][2] = 255 - depthValue;
+				img[y][x][0] = 0;
+				img[y][x][1] = 0;
+				img[y][x][2] = 0;
+			}
+
+			if (handDepth != 0 && numberOfHands > 0) {
+				if (*depthPixel != 0 && (handDepth - RANGE <= *depthPixel && *depthPixel <= handDepth + RANGE)) {
+					mask[y][x] = 128;
 				}
 				else {
-					img[y][x][0] = 0;
-					img[y][x][1] = 0;
-					img[y][x][2] = 0;
+					mask[y][x] = 0;
 				}
 			}
 		}

@@ -1,7 +1,12 @@
 ﻿  DepthActivator.cpp
-c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\depthactivator.cpp(80): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\depthactivator.cpp(81): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\depthactivator.cpp(161): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\depthactivator.cpp(84): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\depthactivator.cpp(85): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\depthactivator.cpp(123): warning C4244: 'initializing': conversion from '_Tp' to 'float', possible loss of data
+          with
+          [
+              _Tp=int
+          ]
+c:\users\prialab\source\repos\tku-project---finger-tracking\fingertracking\depthactivator.cpp(193): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   FingerTracking.vcxproj -> C:\Users\PRIALAB\source\repos\TKU-Project---Finger-Tracking\x64\Debug\FingerTracking.exe
   0 File(s) copied
   0 File(s) copied

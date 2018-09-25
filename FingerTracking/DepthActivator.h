@@ -5,6 +5,8 @@
 #include <OpenNI.h>
 #include <NiTE.h>
 
+using namespace std;
+
 class DepthActivator : virtual public Activator {
 public:
 	DepthActivator();
@@ -24,10 +26,18 @@ public:
 	void toggleEnableHandThreshold();
 	void toggleEnableDrawHandPoint();
 protected:
-	const int RANGE = 50;
+	const int RANGE = 70;
+	const int DISTANCE_THRESHOLD = 10;
+	
 	uchar img[480][640][3];
+	uchar mask[480][640];
 	cv::Mat imageFrame;
+	cv::Mat maskFrame;
 
+	vector<vector<cv::Point>> contours;
+	vector<cv::Point> largestContour;
+	vector<cv::Point> largestHull;
+	
 	nite::HandTrackerFrameRef handsFrame;
 	nite::HandTracker handTracker;
 	int handDepth = 0;
