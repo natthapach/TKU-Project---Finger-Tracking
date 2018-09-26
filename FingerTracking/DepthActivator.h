@@ -28,9 +28,14 @@ public:
 protected:
 	const int RANGE = 70;
 	const int DISTANCE_THRESHOLD = 10;
+	const double fx_d = 5.9421434211923247e+02;
+	const double fy_d = 5.9104053696870778e+02;
+	const double cx_d = 3.3930780975300314e+02;
+	const double cy_d = 2.4273913761751615e+02;
 	
 	uchar img[480][640][3];
 	uchar mask[480][640];
+	uint16_t depthRaw[480][640];
 	cv::Mat imageFrame;
 	cv::Mat maskFrame;
 
@@ -45,6 +50,8 @@ protected:
 	float handPosX = 0;
 	float handPosY = 0;
 	int depthHistogram[65536];
+
+	void calculate3DCoordinate(int px, int py, uint16_t depth, float* cx, float* cy, float* cz);
 private:
 	// Flag
 	bool enableHandTracking = true;

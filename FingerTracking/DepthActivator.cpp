@@ -133,7 +133,7 @@ void DepthActivator::onModifyFrame()
 			double ms = ((double)(startPoint.y - farPoint.y)) / (startPoint.x - farPoint.x);
 			double me = ((double)(endPoint.y - farPoint.y)) / (endPoint.x - farPoint.x);
 			double angle = atan((me - ms) / (1 + (ms * me))) * (180/3.14159265);
-			cout << "angle " << angle << endl;
+
 			cv::line(drawing, startPoint, endPoint, cv::Scalar(255, 255, 255), 1);
 			cv::line(drawing, startPoint, farPoint, cv::Scalar(255, 255, 255), 1);
 			cv::line(drawing, endPoint, farPoint, cv::Scalar(255, 255, 255), 1);
@@ -204,7 +204,21 @@ void DepthActivator::onModifyFrame()
 				x_count++;
 			}
 		}
-		cv::circle(drawing, cv::Point((int)(x_sum/x_count), (int)(y_sum/y_count)), 4, cv::Scalar(255, 255, 255), -1, 8);
+		if (x_count == 0) {
+			continue;
+		}
+		int x = (int)(x_sum / x_count);
+		int y = (int)(y_sum / y_count);
+		uint16_t depth = depthRaw[y][x];
+		
+		cv::circle(drawing, cv::Point(x, y), 4, cv::Scalar(255, 255, 255), -1, 8);
+		
+		float cx, cy, cz;
+		calculate3DCoordinate(x, y, depth, &cx, &cy, &cz);
+		char buffer[50];
+		sprintf_s(buffer, "(%.2f,%.2f,%.2f)", cx, cy, cz);
+		cv::putText(drawing, buffer, cv::Point(x, y + 5), cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+
 	}
 	imageFrame = drawing;
 }
@@ -300,6 +314,18 @@ void DepthActivator::toggleEnableDrawHandPoint()
 	enableDrawHandPoint = !enableDrawHandPoint;
 }
 
+void DepthActivator::calculate3DCoordinate(int px, int py, uint16_t depth, float * cx, float* cy, float* cz)
+{
+	/*(*cx) = (px - cx_d) * depth / fx_d;
+	(*cy) = (py - cy_d) * depth / fy_d;
+	(*cz) = depth;*/
+	/*float bx, by;
+	handTracker.convertDepthCoordinatesToHand(px, py, (int)depth, &bx, &by);
+	*cx = bx;
+	*cy = by;
+	*cz = depth;*/
+}
+
 void DepthActivator::calDepthHistogram(openni::VideoFrameRef depthFrame, int * numberOfPoints, int * numberOfHandPoints)
 {
 	*numberOfPoints = 0;
@@ -339,7 +365,7 @@ void DepthActivator::modifyImage(openni::VideoFrameRef depthFrame, int numberOfP
 		for (unsigned int x = 0; x < 640; x++) {
 			openni::DepthPixel* depthPixel = (openni::DepthPixel*)
 				((char*)depthFrame.getData() + (y*depthFrame.getStrideInBytes())) + x;
-			
+			depthRaw[y][x] = *depthPixel;
 			if (*depthPixel != 0) {
 				uchar depthValue = (uchar)(((float)depthHistogram[*depthPixel] / numberOfPoints) * 255);
 				img[y][x][0] = 255 - depthValue;
@@ -385,6 +411,15 @@ void DepthActivator::settingHandValue()
 			openni::VideoFrameRef depthFrame = handsFrame.getDepthFrame();
 			openni::DepthPixel* depthPixel = (openni::DepthPixel*) ((char*)depthFrame.getData() + ((int)y * depthFrame.getStrideInBytes())) + (int)x;
 			handDepth = *depthPixel;
+
+			float calX;
+			float calY;
+			double calZ;
+			handTracker.convertDepthCoordinatesToHand(x, y, (int)*depthPixel, &calX, &calY);
+			//calculate3DCoordinate(x, y, *depthPixel, &calX, &calY, &calZ);
+			//cout << "hand #" << hand.getId() << " NITE : (" << hand.getPosition().x << ", " << hand.getPosition().y << ", " << hand.getPosition().z << ")" << endl;
+			//cout << "hand #" << hand.getId() << " CAL  : (" << calX << ", " << calY << ", " << calZ << ")" << endl;
+			int a = 1;
 		}
 
 		if (hand.isLost())
