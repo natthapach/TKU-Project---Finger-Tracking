@@ -133,6 +133,16 @@ void Application::stopWriteVideo()
 	cout << "Stop writing video" << endl;
 }
 
+void Application::captureImage()
+{
+	time_t ts = time(nullptr);
+	for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
+		char buffer[40];
+		sprintf_s(buffer, "%d - %s.jpg", ts, it->first.c_str());
+		cv::imwrite(buffer, imageFrames[it->first]);
+	}
+}
+
 void Application::onDie()
 {
 	cv::destroyAllWindows();

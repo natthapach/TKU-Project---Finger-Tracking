@@ -15,6 +15,7 @@ public:
 	void setOnKeyboardCallback(int (*callback)(int key));
 	void startWriteVideo();
 	void stopWriteVideo();
+	void captureImage();
 private:
 	vector<shared_ptr<Activator>> activators;
 	map<string, cv::Mat> imageFrames;
