@@ -22,7 +22,15 @@ void RawDepthActivator::onInitial()
 	if (status != openni::STATUS_OK)
 		return;
 
+	status = rgbSensor.create(device, openni::SENSOR_COLOR);
+	if (status != openni::STATUS_OK)
+		return;
+
 	status = sensor.start();
+	if (status != openni::STATUS_OK)
+		return;
+
+	status = rgbSensor.start();
 	if (status != openni::STATUS_OK)
 		return;
 }
@@ -42,14 +50,18 @@ void RawDepthActivator::onReadFrame()
 		return;
 
 	openni::VideoFrameRef depthFrame;
+	openni::VideoFrameRef rgbFrame;
 	status = sensor.readFrame(&depthFrame);
 	if (status != openni::STATUS_OK && !depthFrame.isValid())
 		return;
+	//status = rgbSensor.readFrame(&rgbFrame);
+	//if (status != openni::STATUS_OK && !rgbFrame.isValid())
+	//	return;
 
 	int numberOfPoints = 0;
 	int numberOfHandPoints = 0;
 	calDepthHistogram(depthFrame, &numberOfPoints, &numberOfHandPoints);
-	modifyImage(depthFrame, numberOfPoints, numberOfHandPoints);
+	modifyImage(depthFrame, rgbFrame, numberOfPoints, numberOfHandPoints);
 }
 
 void RawDepthActivator::onModifyFrame()
@@ -112,7 +124,7 @@ void RawDepthActivator::calDepthHistogram(openni::VideoFrameRef depthFrame, int 
 	}
 }
 
-void RawDepthActivator::modifyImage(openni::VideoFrameRef depthFrame, int numberOfPoints, int numberOfHandPoints)
+void RawDepthActivator::modifyImage(openni::VideoFrameRef depthFrame, openni::VideoFrameRef rgbFrame, int numberOfPoints, int numberOfHandPoints)
 {
 	for (unsigned int y = 0; y < 480; y++) {
 		for (unsigned int x = 0; x < 640; x++) {

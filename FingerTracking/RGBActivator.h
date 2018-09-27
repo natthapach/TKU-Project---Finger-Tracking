@@ -20,4 +20,9 @@ protected:
 	openni::Device device;
 	openni::VideoStream sensor;
 	uchar img[480][640][3];
+	cv::Mat imageFrame;
+	cv::Mat skinMask;
+	void toggleIsShowMask();
+private:
+	bool isShowMask = true;
 };

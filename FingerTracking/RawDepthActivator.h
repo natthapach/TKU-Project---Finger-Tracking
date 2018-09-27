@@ -22,6 +22,7 @@ public:
 protected:
 	openni::Device device;
 	openni::VideoStream sensor;
+	openni::VideoStream rgbSensor;
 	uchar img[480][640][3];
 	uint16_t depthRaw[480][640];
 	int depthHistogram[65536];
@@ -35,5 +36,5 @@ private:
 	bool markMode = true;
 
 	void calDepthHistogram(openni::VideoFrameRef depthFrame, int* numberOfPoints, int* numberOfHandPoints);
-	void modifyImage(openni::VideoFrameRef depthFrame, int numberOfPoints, int numberOfHandPoints);
+	void modifyImage(openni::VideoFrameRef depthFrame, openni::VideoFrameRef rgbFrame, int numberOfPoints, int numberOfHandPoints);
 };

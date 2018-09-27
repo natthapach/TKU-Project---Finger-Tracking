@@ -103,6 +103,9 @@ void DepthActivator::onModifyFrame()
 	}
 	cv::floodFill(gray, cv::Point((int)handPosX, (int)handPosY), cv::Scalar(255));
 	cv::threshold(gray, gray, 129, 255, cv::THRESH_BINARY);
+
+	imageFrame = gray;
+	return;
 	
 	// find contours
 	vector<cv::Vec4i> hierarchy;

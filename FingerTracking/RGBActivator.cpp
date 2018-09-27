@@ -71,6 +71,18 @@ void RGBActivator::onReadFrame()
 
 void RGBActivator::onModifyFrame()
 {
+	imageFrame = cv::Mat(480, 640, CV_8UC3, &img);
+	cv::Mat imgHSV;
+	cv::Mat kernel;
+	cv::cvtColor(imageFrame, imgHSV, cv::COLOR_BGR2HSV);
+	cv::inRange(imgHSV, cv::Scalar(0, 10, 60), cv::Scalar(40, 150, 255), skinMask);
+	kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(11, 11));
+	//cv::erode(skinMask, skinMask, kernel, cv::Point(-1, -1), 2);
+	//cv::dilate(skinMask, skinMask, kernel, cv::Point(-1, -1), 2);
+	cv::GaussianBlur(skinMask, skinMask, cv::Size(3, 3), 0);
+	
+	//imageFrame = skinMask;
+
 }
 
 void RGBActivator::onDraw(string name, cv::Mat canvas)
@@ -79,6 +91,9 @@ void RGBActivator::onDraw(string name, cv::Mat canvas)
 
 void RGBActivator::onPerformKeyboardEvent(int key)
 {
+	if (key == 'm' || key == 'M') {
+		toggleIsShowMask();
+	}
 }
 
 void RGBActivator::onDie()
@@ -87,11 +102,18 @@ void RGBActivator::onDie()
 
 cv::Mat RGBActivator::getImageFrame()
 {
-	return cv::Mat(480, 640, CV_8UC3, &img);
+	if (isShowMask)
+		return skinMask;
+	return imageFrame;
 }
 
 std::string RGBActivator::getName()
 {
 	return "RGB Activator";
+}
+
+void RGBActivator::toggleIsShowMask()
+{
+	isShowMask = !isShowMask;
 }
 
