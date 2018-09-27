@@ -26,7 +26,7 @@ public:
 	void toggleEnableHandThreshold();
 	void toggleEnableDrawHandPoint();
 protected:
-	const int RANGE = 70;
+	const int RANGE = 50;
 	const int DISTANCE_THRESHOLD = 10;
 	const double fx_d = 5.9421434211923247e+02;
 	const double fy_d = 5.9104053696870778e+02;
@@ -43,6 +43,7 @@ protected:
 	vector<cv::Point> largestContour;
 	vector<cv::Point> largestHull;
 	
+	openni::VideoStream videoStream;
 	nite::HandTrackerFrameRef handsFrame;
 	nite::HandTracker handTracker;
 	int handDepth = 0;

@@ -162,6 +162,7 @@ xcopy "%NITE2_REDIST64%*" "$(OutDir)" /y /s /e /i /d</Command>
     <ClInclude Include="Application.h" />
     <ClInclude Include="DepthActivator.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="RawDepthActivator.h" />
     <ClInclude Include="RGBActivator.h" />
   </ItemGroup>
   <ItemGroup>
@@ -175,6 +176,7 @@ xcopy "%NITE2_REDIST64%*" "$(OutDir)" /y /s /e /i /d</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="RawDepthActivator.cpp" />
     <ClCompile Include="RGBActivator.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

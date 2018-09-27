@@ -28,6 +28,21 @@ void DepthActivator::onInitial()
 	status = handTracker.startGestureDetection(nite::GESTURE_HAND_RAISE);
 	if (status != nite::STATUS_OK)
 		return;
+
+	openni::Status statusNi = openni::STATUS_OK;
+
+	statusNi = openni::OpenNI::initialize();
+	if (statusNi != openni::STATUS_OK)
+		return;
+
+	openni::Device device;
+	statusNi = device.open(openni::ANY_DEVICE);
+	if (statusNi != openni::STATUS_OK)
+		return;
+
+	statusNi = videoStream.create(device, openni::SENSOR_DEPTH);
+	if (statusNi != openni::STATUS_OK)
+		return;
 }
 
 void DepthActivator::onPrepare()
@@ -324,6 +339,8 @@ void DepthActivator::calculate3DCoordinate(int px, int py, uint16_t depth, float
 	*cx = bx;
 	*cy = by;
 	*cz = depth;*/
+	openni::CoordinateConverter::convertDepthToWorld(videoStream, (float) px,(float) py, (float) depth, cx, cy, cz);
+
 }
 
 void DepthActivator::calDepthHistogram(openni::VideoFrameRef depthFrame, int * numberOfPoints, int * numberOfHandPoints)
