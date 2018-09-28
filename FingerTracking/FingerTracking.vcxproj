@@ -160,6 +160,8 @@ xcopy "%NITE2_REDIST64%*" "$(OutDir)" /y /s /e /i /d</Command>
   <ItemGroup>
     <ClInclude Include="Activator.h" />
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Combiner.h" />
+    <ClInclude Include="Constants.h" />
     <ClInclude Include="DepthActivator.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RawDepthActivator.h" />
@@ -168,6 +170,8 @@ xcopy "%NITE2_REDIST64%*" "$(OutDir)" /y /s /e /i /d</Command>
   <ItemGroup>
     <ClCompile Include="Activator.cpp" />
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Combiner.cpp" />
+    <ClCompile Include="Constants.cpp" />
     <ClCompile Include="DepthActivator.cpp" />
     <ClCompile Include="FingerTracking.cpp" />
     <ClCompile Include="pch.cpp">
@@ -178,6 +182,8 @@ xcopy "%NITE2_REDIST64%*" "$(OutDir)" /y /s /e /i /d</Command>
     </ClCompile>
     <ClCompile Include="RawDepthActivator.cpp" />
     <ClCompile Include="RGBActivator.cpp" />
+    <ClCompile Include="RGBDepthMaskCombiner.cpp" />
+    <ClCompile Include="RGBDepthMaskCombiner.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

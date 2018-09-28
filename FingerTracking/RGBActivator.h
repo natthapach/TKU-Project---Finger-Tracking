@@ -14,8 +14,10 @@ public:
 	void onDraw(std::string name, cv::Mat canvas);
 	void onPerformKeyboardEvent(int key);
 	void onDie();
+
 	cv::Mat getImageFrame();
 	std::string getName();
+	int getSignature();
 protected:
 	openni::Device device;
 	openni::VideoStream sensor;

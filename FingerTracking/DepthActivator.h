@@ -17,8 +17,11 @@ public:
 	void onDraw(std::string name, cv::Mat canvas);
 	void onPerformKeyboardEvent(int key);
 	void onDie();
+
 	cv::Mat getImageFrame();
 	std::string getName();
+	int getSignature();
+
 	void setEnableHandTracking(bool flag);
 	void setEnableHandThreshold(bool flag);
 	void setEnableDrawHandPoint(bool flag);
@@ -26,7 +29,7 @@ public:
 	void toggleEnableHandThreshold();
 	void toggleEnableDrawHandPoint();
 protected:
-	const int RANGE = 50;
+	const int RANGE = 100;
 	const int DISTANCE_THRESHOLD = 10;
 	const double fx_d = 5.9421434211923247e+02;
 	const double fy_d = 5.9104053696870778e+02;

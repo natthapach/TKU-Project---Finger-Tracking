@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "RawDepthActivator.h"
+#include "Constants.h"
 
 RawDepthActivator::RawDepthActivator()
 {
@@ -89,6 +90,11 @@ cv::Mat RawDepthActivator::getImageFrame()
 std::string RawDepthActivator::getName()
 {
 	return name;
+}
+
+int RawDepthActivator::getSignature()
+{
+	return ACTIVATOR_RAW_DEPTH;
 }
 
 void RawDepthActivator::calDepthHistogram(openni::VideoFrameRef depthFrame, int * numberOfPoints, int * numberOfHandPoints)

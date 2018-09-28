@@ -9,13 +9,19 @@ using namespace std;
 
 Application::Application(map<string, shared_ptr<Activator>> mainFrameActivators) : mainFrameActivators(mainFrameActivators)
 {
-
+	for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
+		signatures[it->first] = it->second->getSignature();
+	}
 }
 
 void Application::onInitial()
 {
 	
 	for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
+		cv::namedWindow(it->first, cv::WINDOW_NORMAL);
+	}
+
+	for (map<string, shared_ptr<Combiner>>::iterator it = combiners.begin(); it != combiners.end(); it++) {
 		cv::namedWindow(it->first, cv::WINDOW_NORMAL);
 	}
 	
@@ -50,6 +56,13 @@ int Application::start()
 			imageFrames[it->first] = it->second->getImageFrame();
 		}
 
+		// onCombine
+		for (map<string, shared_ptr<Combiner>>::iterator it = combiners.begin(); it != combiners.end(); it++) {
+			it->second->onCombine(imageFrames, signatures);
+		}
+		for (map<string, shared_ptr<Combiner>>::iterator it = combiners.begin(); it != combiners.end(); it++) {
+			imageFrames[it->first] = it->second->getImageFrame();
+		}
 		// onDraw
 		for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
 			for (map<string, shared_ptr<Activator>>::iterator it2 = mainFrameActivators.begin(); it2 != mainFrameActivators.end(); ++it2) {
@@ -62,7 +75,9 @@ int Application::start()
 			if (isWriteVideo)
 				videoWriters[it->first] << imageFrames[it->first];
 		}
-		//outVideo << imageFrames["RGB"];
+		for (map<string, shared_ptr<Combiner>>::iterator it = combiners.begin(); it != combiners.end(); it++) {
+			cv::imshow(it->first, imageFrames[it->first]);
+		}
 
 		if (frameCount == 0) {
 			startTimestamp = time(nullptr);
@@ -93,6 +108,11 @@ int Application::start()
 void Application::registerActivator(shared_ptr<Activator> activator)
 {
 	activators.push_back(activator);
+}
+
+void Application::registerCombiner(string windowName, shared_ptr<Combiner> combiner)
+{
+	combiners[windowName] = combiner;
 }
 
 

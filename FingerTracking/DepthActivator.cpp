@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "DepthActivator.h"
+#include "Constants.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -95,6 +96,7 @@ void DepthActivator::onModifyFrame()
 
 	cv::Mat gray = maskFrame;
 	// make sure Seed Point (hand point) belong to hand region
+
 	int smallKernel = 3;
 	for (int y = handPosY-smallKernel; y < handPosY+smallKernel; y++) {
 		for (int x = handPosX-smallKernel; x < handPosX+smallKernel; x++) {
@@ -300,6 +302,11 @@ cv::Mat DepthActivator::getImageFrame()
 std::string DepthActivator::getName()
 {
 	return "Depth Activator";
+}
+
+int DepthActivator::getSignature()
+{
+	return ACTIVATOR_DEPTH;
 }
 
 void DepthActivator::setEnableHandTracking(bool flag)

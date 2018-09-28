@@ -12,6 +12,6 @@ public:
 	virtual void onDie() = 0;
 	virtual cv::Mat getImageFrame() = 0;
 	virtual std::string getName() = 0;
+	virtual int getSignature() = 0;
 	std::string name;
-	
 };

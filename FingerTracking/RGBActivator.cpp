@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "RGBActivator.h"
+#include "Constants.h"
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 
@@ -80,9 +81,12 @@ void RGBActivator::onModifyFrame()
 
 	cv::Mat imgHSV;
 	cv::Mat kernel;
+	cv::Mat mask1, mask2;
 	cv::cvtColor(imageFrame, imgHSV, cv::COLOR_BGR2HSV);
-	cv::inRange(imgHSV, cv::Scalar(0, 10, 60), cv::Scalar(40, 150, 255), skinMask);
-	kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(11, 11));
+	cv::inRange(imgHSV, cv::Scalar(160, 10, 60), cv::Scalar(179, 255, 255), mask1);
+	cv::inRange(imgHSV, cv::Scalar(0, 10, 60), cv::Scalar(40, 150, 255), mask2);
+	cv::bitwise_or(mask1, mask2, skinMask);
+	//kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3, 3));
 	//cv::erode(skinMask, skinMask, kernel, cv::Point(-1, -1), 2);
 	//cv::dilate(skinMask, skinMask, kernel, cv::Point(-1, -1), 2);
 	cv::GaussianBlur(skinMask, skinMask, cv::Size(3, 3), 0);
@@ -116,6 +120,11 @@ cv::Mat RGBActivator::getImageFrame()
 std::string RGBActivator::getName()
 {
 	return "RGB Activator";
+}
+
+int RGBActivator::getSignature()
+{
+	return ACTIVATOR_RGB;
 }
 
 void RGBActivator::toggleIsShowMask()
