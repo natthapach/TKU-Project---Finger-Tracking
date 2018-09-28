@@ -72,6 +72,12 @@ void RGBActivator::onReadFrame()
 void RGBActivator::onModifyFrame()
 {
 	imageFrame = cv::Mat(480, 640, CV_8UC3, &img);
+	cv::Mat roi = imageFrame.clone()(cv::Rect(cv::Point(48, 56), cv::Size(577, 424)));
+	cv::resize(roi, roi, cv::Size(640, 470));
+	cv::Mat blackRow = cv::Mat::zeros(cv::Size(640, 10), CV_8UC3);
+	roi.push_back(blackRow);
+	imageFrame = roi;
+
 	cv::Mat imgHSV;
 	cv::Mat kernel;
 	cv::cvtColor(imageFrame, imgHSV, cv::COLOR_BGR2HSV);
@@ -82,7 +88,7 @@ void RGBActivator::onModifyFrame()
 	cv::GaussianBlur(skinMask, skinMask, cv::Size(3, 3), 0);
 	
 	//imageFrame = skinMask;
-
+	
 }
 
 void RGBActivator::onDraw(string name, cv::Mat canvas)
