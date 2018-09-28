@@ -243,7 +243,11 @@ void DepthActivator::onModifyFrame()
 	imageFrame = drawing;
 }
 
-void DepthActivator::onDraw(string name, cv::Mat canvas)
+void DepthActivator::onMask(int signature, cv::Mat mask)
+{
+}
+
+void DepthActivator::onDraw(int signature, cv::Mat canvas)
 {
 	//cv::rectangle(canvas, cv::Rect(55, 60, 10, 10), cv::Scalar(0, 0, 255), -1, cv::LINE_8);
 	//cv::rectangle(canvas, cv::Rect(600, 470, 10, 10), cv::Scalar(0, 0, 255), -1, cv::LINE_8);
@@ -301,7 +305,7 @@ cv::Mat DepthActivator::getImageFrame()
 
 std::string DepthActivator::getName()
 {
-	return "Depth Activator";
+	return WINDOW_NAME_ACTIVATOR_DEPTH;
 }
 
 int DepthActivator::getSignature()

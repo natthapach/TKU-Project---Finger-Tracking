@@ -70,7 +70,11 @@ void RawDepthActivator::onModifyFrame()
 	imageFrame = cv::Mat(480, 640, CV_8UC3, &img);
 }
 
-void RawDepthActivator::onDraw(std::string name, cv::Mat canvas)
+void RawDepthActivator::onMask(int signature, cv::Mat mask)
+{
+}
+
+void RawDepthActivator::onDraw(int signature, cv::Mat canvas)
 {
 }
 
@@ -89,7 +93,7 @@ cv::Mat RawDepthActivator::getImageFrame()
 
 std::string RawDepthActivator::getName()
 {
-	return name;
+	return WINDOW_NAME_ACTIVATOR_RAW_DEPTH;
 }
 
 int RawDepthActivator::getSignature()

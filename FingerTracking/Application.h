@@ -9,28 +9,29 @@ using namespace std;
 
 class Application {
 public:
-	Application(map<string, shared_ptr<Activator>> mainFrameActivators);	// window_name: activator
+	Application(vector<shared_ptr<Activator>> activators, vector<shared_ptr<Combiner>> combiners);	// window_name: activator
 	void onInitial();
 	int start();
-	void registerActivator(shared_ptr<Activator> activator);
-	void registerCombiner(string windowName, shared_ptr<Combiner> combiner);
 	void setOnKeyboardCallback(int (*callback)(int key));
 	void startWriteVideo();
 	void stopWriteVideo();
 	void captureImage();
 private:
-	vector<shared_ptr<Activator>> activators;
-	map<string, cv::Mat> imageFrames;
-	map<string, shared_ptr<Activator>> mainFrameActivators;		// { window_name : Activator }
-	map<string, int> signatures;
-	map<string, shared_ptr<Combiner>> combiners;
+	
+	map<int, cv::Mat> imageFrames;
+	map<int, cv::Mat> maskFrames;
+	map<int, shared_ptr<Activator>> activators;		// { signature: Activator }
+	map<int, shared_ptr<Combiner>> combiners;
+	map<int, string> windowNames;
+	
 
 	cv::VideoWriter outVideo;
-	map<string, cv::VideoWriter> videoWriters;
+	map<int, cv::VideoWriter> videoWriters;
 	time_t startTimestamp = 0;
 	double estimateFPS = 0;
 	long int frameCount = 0;
 	bool isWriteVideo = false;
+	bool isShowMask = true;
 
 	int (*onKeybordCallback)(int key);
 	void onDie();

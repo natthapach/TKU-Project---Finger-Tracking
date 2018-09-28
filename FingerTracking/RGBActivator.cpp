@@ -27,13 +27,13 @@ void RGBActivator::onInitial()
 	if (status != openni::STATUS_OK)
 		return;
 
-	openni::VideoMode vmod;
+	/*openni::VideoMode vmod;
 	vmod.setFps(30);
 	vmod.setPixelFormat(openni::PIXEL_FORMAT_RGB888);
 	vmod.setResolution(640, 480);
 	status = sensor.setVideoMode(vmod);
 	if (status != openni::STATUS_OK)
-		return;
+		return;*/
 
 	status = sensor.start();
 	if (status != openni::STATUS_OK)
@@ -95,7 +95,11 @@ void RGBActivator::onModifyFrame()
 	
 }
 
-void RGBActivator::onDraw(string name, cv::Mat canvas)
+void RGBActivator::onMask(int signature, cv::Mat mask)
+{
+}
+
+void RGBActivator::onDraw(int signature, cv::Mat canvas)
 {
 }
 
@@ -119,7 +123,7 @@ cv::Mat RGBActivator::getImageFrame()
 
 std::string RGBActivator::getName()
 {
-	return "RGB Activator";
+	return WINDOW_NAME_ACTIVATOR_RGB;
 }
 
 int RGBActivator::getSignature()

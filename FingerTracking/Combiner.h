@@ -4,7 +4,8 @@
 using namespace std;
 class Combiner {
 public:
-	virtual void onCombine(map<string, cv::Mat> imageFrame, map<string, int> signatures) = 0;
-	virtual cv::Mat getImageFrame() = 0;
+	virtual void onCombine(map<int, cv::Mat> imageFrame) = 0;
+	virtual cv::Mat getMaskFrame() = 0;
 	virtual int getSignature() = 0;
+	virtual string getName() = 0;
 };

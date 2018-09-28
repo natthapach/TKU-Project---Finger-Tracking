@@ -7,30 +7,31 @@
 
 using namespace std;
 
-Application::Application(map<string, shared_ptr<Activator>> mainFrameActivators) : mainFrameActivators(mainFrameActivators)
+Application::Application(vector<shared_ptr<Activator>> activators, vector<shared_ptr<Combiner>> combiners)
 {
-	for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
-		signatures[it->first] = it->second->getSignature();
+	for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
+		this->activators[(*it)->getSignature()] = (*it);
+	}
+	for (vector<shared_ptr<Combiner>>::iterator it = combiners.begin(); it != combiners.end(); it++) {
+		this->combiners[(*it)->getSignature()] = (*it);
 	}
 }
 
 void Application::onInitial()
 {
 	
-	for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
-		cv::namedWindow(it->first, cv::WINDOW_NORMAL);
+	for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
+		cv::namedWindow(it->second->getName(), cv::WINDOW_NORMAL);
 	}
-
-	for (map<string, shared_ptr<Combiner>>::iterator it = combiners.begin(); it != combiners.end(); it++) {
-		cv::namedWindow(it->first, cv::WINDOW_NORMAL);
+	if (isShowMask) {
+		for (map<int, shared_ptr<Combiner>>::iterator it = combiners.begin(); it != combiners.end(); it++) {
+			cv::namedWindow(it->second->getName(), cv::WINDOW_NORMAL);
+		}
 	}
 	
-	for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
-		(*it)->onInitial();
+	for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
+		it->second->onInitial();
 	}
-
-	/*outVideo.open("test1.avi", cv::VideoWriter::fourcc('I', 'Y', 'U', 'V'), 15, cv::Size(640, 480), true);
-	cout << "output open " << outVideo.isOpened() << endl;*/
 }
 
 int Application::start()
@@ -38,46 +39,59 @@ int Application::start()
 	// Life Cycle Loop
 	while (true) {
 		// onPrepare
-		for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
-			(*it)->onPrepare();
+		for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
+			it->second->onPrepare();
 		}
-
 		// onReadFrame
-		for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
-			(*it)->onReadFrame();
+		for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
+			it->second->onReadFrame();
 		}
 
 		// onModifyFrame
-		for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
-			(*it)->onModifyFrame();
+		for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
+			it->second->onModifyFrame();
 		}
 
-		for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
+		// Read Activator Frame
+		for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
 			imageFrames[it->first] = it->second->getImageFrame();
 		}
 
 		// onCombine
-		for (map<string, shared_ptr<Combiner>>::iterator it = combiners.begin(); it != combiners.end(); it++) {
-			it->second->onCombine(imageFrames, signatures);
+		for (map<int, shared_ptr<Combiner>>::iterator it = combiners.begin(); it != combiners.end(); it++) {
+			it->second->onCombine(imageFrames);
 		}
-		for (map<string, shared_ptr<Combiner>>::iterator it = combiners.begin(); it != combiners.end(); it++) {
-			imageFrames[it->first] = it->second->getImageFrame();
+
+		// Read Combiner Mask
+		for (map<int, shared_ptr<Combiner>>::iterator it = combiners.begin(); it != combiners.end(); it++) {
+			maskFrames[it->first] = it->second->getMaskFrame();
 		}
-		// onDraw
-		for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
-			for (map<string, shared_ptr<Activator>>::iterator it2 = mainFrameActivators.begin(); it2 != mainFrameActivators.end(); ++it2) {
-				(*it)->onDraw(it2->first, imageFrames[it2->first]);
+		// onMask
+		for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
+			for (map<int, cv::Mat>::iterator it2 = maskFrames.begin(); it2 != maskFrames.end(); it2++) {
+				it->second->onMask(it2->first, it2->second);
 			}
 		}
 
-		for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
-			cv::imshow(it->first, imageFrames[it->first]);
-			if (isWriteVideo)
-				videoWriters[it->first] << imageFrames[it->first];
+		// onDraw
+		for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
+			for (map<int, cv::Mat>::iterator it2 = imageFrames.begin(); it2 != imageFrames.end(); it2++) {
+				it->second->onDraw(it2->first, it2->second);
+			}
 		}
-		for (map<string, shared_ptr<Combiner>>::iterator it = combiners.begin(); it != combiners.end(); it++) {
-			cv::imshow(it->first, imageFrames[it->first]);
+
+		// Show Image
+		for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
+			cv::imshow(it->second->getName(), imageFrames[it->first]);
+			/*if (isWriteVideo)
+				videoWriters[]*/
 		}
+		if (isShowMask) {
+			for (map<int, shared_ptr<Combiner>>::iterator it = combiners.begin(); it != combiners.end(); it++) {
+				cv::imshow(it->second->getName(), maskFrames[it->first]);
+			}
+		}
+		
 
 		if (frameCount == 0) {
 			startTimestamp = time(nullptr);
@@ -94,8 +108,9 @@ int Application::start()
 			break;
 		}
 
-		for (vector<shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
-			(*it)->onPerformKeyboardEvent(key);
+		// onPerformKeyboardEvent
+		for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
+			it->second->onPerformKeyboardEvent(key);
 		}
 	}
 
@@ -103,16 +118,6 @@ int Application::start()
 	// Die
 	onDie();
 	return 0;
-}
-
-void Application::registerActivator(shared_ptr<Activator> activator)
-{
-	activators.push_back(activator);
-}
-
-void Application::registerCombiner(string windowName, shared_ptr<Combiner> combiner)
-{
-	combiners[windowName] = combiner;
 }
 
 
@@ -133,9 +138,9 @@ void Application::startWriteVideo()
 	}
 	isWriteVideo = true;
 	time_t ts = time(nullptr);
-	for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
-		char buffer[40];
-		sprintf_s(buffer, "%d - %s.avi", ts, it->first.c_str());
+	for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
+		char buffer[80];
+		sprintf_s(buffer, "%d - %s.avi", ts, it->second->getName().c_str());
 		cv::VideoWriter outVideo;
 		outVideo.open(buffer, cv::VideoWriter::fourcc('I', 'Y', 'U', 'V'), estimateFPS, cv::Size(640, 480), true);
 		videoWriters[it->first] = outVideo;
@@ -147,7 +152,7 @@ void Application::startWriteVideo()
 void Application::stopWriteVideo()
 {
 	isWriteVideo = false;
-	for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
+	for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
 		videoWriters[it->first].release();
 	}
 	cout << "Stop writing video" << endl;
@@ -156,9 +161,9 @@ void Application::stopWriteVideo()
 void Application::captureImage()
 {
 	time_t ts = time(nullptr);
-	for (map<string, shared_ptr<Activator>>::iterator it = mainFrameActivators.begin(); it != mainFrameActivators.end(); ++it) {
-		char buffer[40];
-		sprintf_s(buffer, "%d - %s.jpg", ts, it->first.c_str());
+	for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); ++it) {
+		char buffer[80];
+		sprintf_s(buffer, "%d - %s.jpg", ts, it->second->getName().c_str());
 		cv::imwrite(buffer, imageFrames[it->first]);
 	}
 }

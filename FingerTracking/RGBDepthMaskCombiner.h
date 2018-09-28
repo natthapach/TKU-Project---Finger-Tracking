@@ -5,9 +5,10 @@ using namespace std;
 
 class RGBDepthMaskCombiner : virtual public Combiner {
 public:
-	void onCombine(map<string, cv::Mat> imageFrame, map<string, int> signatures);
-	cv::Mat getImageFrame();
+	void onCombine(map<int, cv::Mat> imageFrame);
+	cv::Mat getMaskFrame();
 	int getSignature();
+	string getName();
 protected:
 	cv::Mat imageFrame;
 

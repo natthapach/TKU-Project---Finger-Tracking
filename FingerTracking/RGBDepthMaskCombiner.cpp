@@ -1,22 +1,12 @@
 #include "pch.h"
 #include "RGBDepthMaskCombiner.h"
 #include "Constants.h"
+#include <stdio.h>
 
-void RGBDepthMaskCombiner::onCombine(map<string, cv::Mat> imageFrames, map<string, int> signatures)
+void RGBDepthMaskCombiner::onCombine(map<int, cv::Mat> imageFrames)
 {
-	string depthKey;
-	string rgbKey;
-	for (map<string, int>::iterator it = signatures.begin(); it != signatures.end(); it++) {
-		if (it->second == ACTIVATOR_DEPTH) {
-			depthKey = it->first;
-		}
-		else if (it->second == ACTIVATOR_RGB) {
-			rgbKey = it->first;
-		}
-	}
-	
-	cv::Mat depthFrame = imageFrames[depthKey];
-	cv::Mat rgbFrame = imageFrames[rgbKey];
+	cv::Mat depthFrame = imageFrames[ACTIVATOR_DEPTH];
+	cv::Mat rgbFrame = imageFrames[ACTIVATOR_RGB];
 	cv::Mat res;
 
 	if (depthFrame.type() == CV_8UC1 && rgbFrame.type() == CV_8UC1) {
@@ -55,7 +45,7 @@ void RGBDepthMaskCombiner::onCombine(map<string, cv::Mat> imageFrames, map<strin
 	}
 }
 
-cv::Mat RGBDepthMaskCombiner::getImageFrame()
+cv::Mat RGBDepthMaskCombiner::getMaskFrame()
 {
 	return imageFrame;
 }
@@ -63,4 +53,9 @@ cv::Mat RGBDepthMaskCombiner::getImageFrame()
 int RGBDepthMaskCombiner::getSignature()
 {
 	return COMBINER_RGB_DEPTH;
+}
+
+string RGBDepthMaskCombiner::getName()
+{
+	return WINDOW_NAME_COMBINER_RGB_DEPTH;
 }
