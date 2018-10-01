@@ -33,6 +33,7 @@ void RGBDepthMaskCombiner::onCombine(map<int, cv::Mat> imageFrames)
 		largestContour = contours[maxIndex];
 		cv::cvtColor(imageFrame, imageFrame, cv::COLOR_GRAY2BGR);
 		cv::drawContours(mask, vector<vector<cv::Point>>{ largestContour }, 0, cv::Scalar(255, 255, 255), -1, 8, vector<cv::Vec4i>(), 0, cv::Point());
+		cv::dilate(mask, mask, cv::Mat());
 		imageFrame = mask;
 	}
 	else {
