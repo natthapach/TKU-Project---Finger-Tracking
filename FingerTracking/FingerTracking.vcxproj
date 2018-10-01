@@ -163,6 +163,7 @@ xcopy "%NITE2_REDIST64%*" "$(OutDir)" /y /s /e /i /d</Command>
     <ClInclude Include="Combiner.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="DepthActivator.h" />
+    <ClInclude Include="HandDepthVisualizeActivator.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RawDepthActivator.h" />
     <ClInclude Include="RGBActivator.h" />
@@ -174,6 +175,7 @@ xcopy "%NITE2_REDIST64%*" "$(OutDir)" /y /s /e /i /d</Command>
     <ClCompile Include="Constants.cpp" />
     <ClCompile Include="DepthActivator.cpp" />
     <ClCompile Include="FingerTracking.cpp" />
+    <ClCompile Include="HandDepthVisualizeActivator.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

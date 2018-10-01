@@ -13,31 +13,46 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Activators">
+      <UniqueIdentifier>{6ee1e453-daf5-44b3-a0b3-dddf7996960a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Combiners">
+      <UniqueIdentifier>{7c7e9d57-3c2a-4f05-b8cc-7e9007141efb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Activators">
+      <UniqueIdentifier>{e10934ba-1d00-43a4-b77a-2656ab57d386}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Combiners">
+      <UniqueIdentifier>{5c8b94b0-17c1-4537-9f32-719161182db5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Activator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Application.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DepthActivator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RGBActivator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RawDepthActivator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Combiner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Activator.h">
+      <Filter>Header Files\Activators</Filter>
+    </ClInclude>
+    <ClInclude Include="DepthActivator.h">
+      <Filter>Header Files\Activators</Filter>
+    </ClInclude>
+    <ClInclude Include="HandDepthVisualizeActivator.h">
+      <Filter>Header Files\Activators</Filter>
+    </ClInclude>
+    <ClInclude Include="RawDepthActivator.h">
+      <Filter>Header Files\Activators</Filter>
+    </ClInclude>
+    <ClInclude Include="RGBActivator.h">
+      <Filter>Header Files\Activators</Filter>
+    </ClInclude>
+    <ClInclude Include="Combiner.h">
+      <Filter>Header Files\Combiners</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -47,32 +62,35 @@
     <ClCompile Include="FingerTracking.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Activator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Application.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DepthActivator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RGBActivator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RawDepthActivator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Combiner.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RGBDepthMaskCombiner.h">
-      <Filter>Header Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RGBDepthMaskCombiner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Constants.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DepthActivator.cpp">
+      <Filter>Source Files\Activators</Filter>
+    </ClCompile>
+    <ClCompile Include="RawDepthActivator.cpp">
+      <Filter>Source Files\Activators</Filter>
+    </ClCompile>
+    <ClCompile Include="RGBActivator.cpp">
+      <Filter>Source Files\Activators</Filter>
+    </ClCompile>
+    <ClCompile Include="RGBDepthMaskCombiner.cpp">
+      <Filter>Source Files\Combiners</Filter>
+    </ClCompile>
+    <ClCompile Include="Activator.cpp">
+      <Filter>Source Files\Activators</Filter>
+    </ClCompile>
+    <ClCompile Include="Combiner.cpp">
+      <Filter>Source Files\Combiners</Filter>
+    </ClCompile>
+    <ClCompile Include="RGBDepthMaskCombiner.h">
+      <Filter>Header Files\Combiners</Filter>
+    </ClCompile>
+    <ClCompile Include="HandDepthVisualizeActivator.cpp">
+      <Filter>Source Files\Activators</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
