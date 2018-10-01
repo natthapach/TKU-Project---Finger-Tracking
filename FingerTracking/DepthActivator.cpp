@@ -87,164 +87,70 @@ void DepthActivator::onReadFrame()
 
 void DepthActivator::onModifyFrame()
 {
-	//imageFrame = cv::Mat(480, 640, CV_8UC3, &img);
 	if (numberOfHands <= 0)
 		return;
 
-	/*cv::Mat gray;
-	cv::cvtColor(imageFrame, gray, cv::COLOR_BGR2GRAY);*/
-
 	cv::Mat gray = maskFrame;
-	// make sure Seed Point (hand point) belong to hand region
-
-	int smallKernel = 3;
-	for (int y = handPosY-smallKernel; y < handPosY+smallKernel; y++) {
-		for (int x = handPosX-smallKernel; x < handPosX+smallKernel; x++) {
-			gray.at<uchar>(y, x) = 128;
-		}
-	}
-	cv::floodFill(gray, cv::Point((int)handPosX, (int)handPosY), cv::Scalar(255));
-	cv::threshold(gray, gray, 129, 255, cv::THRESH_BINARY);
-
-	/*imageFrame = gray;
-	return;*/
+	floodFillHand(gray);
 	
-	// find contours
-	vector<cv::Vec4i> hierarchy;
-	cv::findContours(gray, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
-	
-	// find largest contour
-	double maxArea = 0;
-	int maxIndex = 0;
-	for (int i = 0; i < contours.size(); i++) {
-		double a = cv::contourArea(contours[i], false);
-		if (a > maxArea) {
-			maxArea = a;
-			maxIndex = i;
-		}
-	}
-	largestContour = contours[maxIndex];
+	imageFrame = gray;
+	return;
 
-	// find convex hull of largest contour
-	cv::convexHull(cv::Mat(largestContour), largestHull);
-	
-	// find convexity defect
+	findHandContours(gray, contours, largestContour);
+
 	vector<int> largestHull_I;
-	cv::convexHull(cv::Mat(largestContour), largestHull_I);
 	vector<cv::Vec4i> defects;
-	cv::convexityDefects(largestContour, largestHull_I, defects);
+	findHandConvexHull(largestContour, largestHull, largestHull_I, defects);
 
 	cv::Mat drawing = cv::Mat::zeros(gray.size(), CV_8UC3);
 
 	vector<cv::Point> convexPoint;
+	findConvexPoint(defects, convexPoint, largestContour);
 
-	for (int i = 0; i < defects.size(); i++) {
-		cv::Vec4i& v = defects[i];
-		float depth = v[3];
-		if (depth > 10) {
-			int startIndex = v[0];
-			int endIndex = v[1];
-			int farIndex = v[2];
-
-			cv::Point startPoint(largestContour[startIndex]);
-			cv::Point endPoint(largestContour[endIndex]);
-			cv::Point farPoint(largestContour[farIndex]);
-
-			double ms = ((double)(startPoint.y - farPoint.y)) / (startPoint.x - farPoint.x);
-			double me = ((double)(endPoint.y - farPoint.y)) / (endPoint.x - farPoint.x);
-			double angle = atan((me - ms) / (1 + (ms * me))) * (180/3.14159265);
-
-			cv::line(drawing, startPoint, endPoint, cv::Scalar(255, 255, 255), 1);
-			cv::line(drawing, startPoint, farPoint, cv::Scalar(255, 255, 255), 1);
-			cv::line(drawing, endPoint, farPoint, cv::Scalar(255, 255, 255), 1);
-
-			if (angle < 0) {
-				cv::circle(drawing, farPoint, 4, cv::Scalar(0, 0, 255), 2);
-				//cv::circle(drawing, startPoint, 4, cv::Scalar(0, 255, 0), 2);
-				//cv::circle(drawing, endPoint, 4, cv::Scalar(0, 255, 0), 2);
-				convexPoint.push_back(startPoint);
-				convexPoint.push_back(endPoint);
-			}
-			/*else 
-				cv::circle(drawing, farPoint, 4, cv::Scalar(255, 255, 255), 2);*/
-		}
-	}
-
-
-	
 	cv::drawContours(drawing, vector<vector<cv::Point>>{ largestContour }, 0, cv::Scalar(0, 255, 0), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
 
-	vector<cv::Point> clusterInput = convexPoint;
-	vector<vector<double>> distMat(clusterInput.size());
-	for (int i = 0; i < distMat.size(); i++) {
-		cv::Point pi = clusterInput[i];
-		distMat[i] = vector<double>(clusterInput.size());
+	vector<cv::Point> fingerPoint;
+	clusterPoint(convexPoint, fingerPoint);
 
-		for (int j = i+1; j < distMat[i].size(); j++) {
-			cv::Point pj = clusterInput[j];
-			distMat[i][j] = sqrt(pow(pi.x - pj.x, 2) + pow(pi.y - pj.y, 2));
-		}
-	}
-	vector<int> cluster(distMat.size(), 0);
-	int clusterCount = 1;
-	for (int i = 0; i < distMat.size(); i++) {
-		for (int j = i + 1; j < distMat[i].size(); j++) {
-			if (distMat[i][j] < DISTANCE_THRESHOLD) {
-				if (cluster[i] == 0 && cluster[j] == 0) {
-					cluster[i] = clusterCount;
-					cluster[j] = clusterCount;
-					clusterCount++;
-				}
-				else if (cluster[i] == 0) {
-					cluster[i] = cluster[j];
-				}
-				else {
-					cluster[j] = cluster[i];
-				}
-			}
-		}
-	}
-	for (int i = 0; i < cluster.size(); i++) {
-		if (cluster[i] == 0) {
-			cluster[i] = clusterCount;
-			clusterCount++;
-		}
-	}
-	int m = cluster.size();
-	for (int i = 1; i < m - 1; i++) {
-		double x_sum = 0;
-		double y_sum = 0;
-		int x_count = 0;
-		int y_count = 0;
-		for (int j = 0; j < clusterInput.size(); j++) {
-			if (cluster[j] == i) {
-				x_sum += clusterInput[j].x;
-				y_sum += clusterInput[j].y;
-				y_count++;
-				x_count++;
-			}
-		}
-		if (x_count == 0) {
-			continue;
-		}
-		int x = (int)(x_sum / x_count);
-		int y = (int)(y_sum / y_count);
-		uint16_t depth = depthRaw[y][x];
-		
-		cv::circle(drawing, cv::Point(x, y), 4, cv::Scalar(255, 255, 255), -1, 8);
-		
-		float cx, cy, cz;
-		calculate3DCoordinate(x, y, depth, &cx, &cy, &cz);
-		char buffer[50];
-		sprintf_s(buffer, "(%.2f,%.2f,%.2f)", cx, cy, cz);
-		cv::putText(drawing, buffer, cv::Point(x, y + 5), cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
-
+	for (int i = 0; i < fingerPoint.size(); i++) {
+		cv::circle(drawing, fingerPoint[i], 2, cv::Scalar(255, 255, 2555), -1);
 	}
 	imageFrame = drawing;
 }
 
-void DepthActivator::onMask(int signature, cv::Mat mask)
+void DepthActivator::onMask(std::map<int, cv::Mat> masks)
 {
+	if (imageFrame.type() != CV_8UC1)
+		return;
+
+	if (enableRGBSkinMask && masks.count(COMBINER_RGB_DEPTH) == 1) {
+		cv::Mat mask = masks[COMBINER_RGB_DEPTH];
+		if (imageFrame.type() == mask.type())
+			cv::bitwise_and(imageFrame, mask, imageFrame);
+	}
+		
+
+	cv::Mat gray = imageFrame;
+	findHandContours(gray, contours, largestContour);
+
+	vector<int> largestHull_I;
+	vector<cv::Vec4i> defects;
+	findHandConvexHull(largestContour, largestHull, largestHull_I, defects);
+
+	cv::Mat drawing = cv::Mat::zeros(gray.size(), CV_8UC3);
+
+	vector<cv::Point> convexPoint;
+	findConvexPoint(defects, convexPoint, largestContour);
+
+	cv::drawContours(drawing, vector<vector<cv::Point>>{ largestContour }, 0, cv::Scalar(0, 255, 0), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
+
+	vector<cv::Point> fingerPoint;
+	clusterPoint(convexPoint, fingerPoint);
+
+	for (int i = 0; i < fingerPoint.size(); i++) {
+		cv::circle(drawing, fingerPoint[i], 2, cv::Scalar(255, 255, 2555), -1);
+	}
+	imageFrame = drawing;
 }
 
 void DepthActivator::onDraw(int signature, cv::Mat canvas)
@@ -291,6 +197,10 @@ void DepthActivator::onPerformKeyboardEvent(int key)
 	else if (key == 'k' || key == 'K') {
 		toggleEnableDrawHandPoint();
 		std::cout << "K " << enableDrawHandPoint << std::endl;
+	}
+	else if (key == 's' || key == 'S') {
+		toggleEnableSkinMask();
+		std::cout << "Toggle enable skin mask, current : " << enableRGBSkinMask << endl;
 	}
 }
 
@@ -341,6 +251,11 @@ void DepthActivator::toggleEnableHandThreshold()
 void DepthActivator::toggleEnableDrawHandPoint()
 {
 	enableDrawHandPoint = !enableDrawHandPoint;
+}
+
+void DepthActivator::toggleEnableSkinMask()
+{
+	enableRGBSkinMask = !enableRGBSkinMask;
 }
 
 void DepthActivator::calculate3DCoordinate(int px, int py, uint16_t depth, float * cx, float* cy, float* cz)
@@ -457,6 +372,152 @@ void DepthActivator::settingHandValue()
 			numberOfHands--;
 		if (hand.isNew())
 			numberOfHands++;
+	}
+}
+
+void DepthActivator::floodFillHand(cv::Mat & in)
+{
+	int smallKernel = 3;
+	for (int y = handPosY - smallKernel; y < handPosY + smallKernel; y++) {
+		for (int x = handPosX - smallKernel; x < handPosX + smallKernel; x++) {
+			in.at<uchar>(y, x) = 128;
+		}
+	}
+	cv::floodFill(in, cv::Point((int)handPosX, (int)handPosY), cv::Scalar(255));
+	cv::threshold(in, in, 129, 255, cv::THRESH_BINARY);
+}
+
+void DepthActivator::findHandContours(cv::Mat& in, vector<vector<cv::Point>>& contours, vector<cv::Point>& largestContour)
+{
+	// find contours
+	vector<cv::Vec4i> hierarchy;
+	cv::findContours(in, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+
+	// find largest contour
+	double maxArea = 0;
+	int maxIndex = 0;
+	for (int i = 0; i < contours.size(); i++) {
+		double a = cv::contourArea(contours[i], false);
+		if (a > maxArea) {
+			maxArea = a;
+			maxIndex = i;
+		}
+	}
+
+	if (contours.size() == 0)
+		return;
+	largestContour = contours[maxIndex];
+}
+
+void DepthActivator::findHandConvexHull(vector<cv::Point>& largestContour, vector<cv::Point>& largestHull, vector<int>& largestHull_I, vector<cv::Vec4i>& defects)
+{
+	// find convex hull of largest contour
+	cv::convexHull(cv::Mat(largestContour), largestHull);
+
+	// find convexity defect
+	cv::convexHull(cv::Mat(largestContour), largestHull_I);
+	cv::convexityDefects(largestContour, largestHull_I, defects);
+}
+
+void DepthActivator::findConvexPoint(vector<cv::Vec4i>& defects, vector<cv::Point>& convexPoint, vector<cv::Point>& largestContour)
+{
+	for (int i = 0; i < defects.size(); i++) {
+		cv::Vec4i& v = defects[i];
+		float depth = v[3];
+		if (depth > 10) {
+			int startIndex = v[0];
+			int endIndex = v[1];
+			int farIndex = v[2];
+
+			cv::Point startPoint(largestContour[startIndex]);
+			cv::Point endPoint(largestContour[endIndex]);
+			cv::Point farPoint(largestContour[farIndex]);
+
+			double ms = ((double)(startPoint.y - farPoint.y)) / (startPoint.x - farPoint.x);
+			double me = ((double)(endPoint.y - farPoint.y)) / (endPoint.x - farPoint.x);
+			double angle = atan((me - ms) / (1 + (ms * me))) * (180 / 3.14159265);
+
+			/*cv::line(drawing, startPoint, endPoint, cv::Scalar(255, 255, 255), 1);
+			cv::line(drawing, startPoint, farPoint, cv::Scalar(255, 255, 255), 1);
+			cv::line(drawing, endPoint, farPoint, cv::Scalar(255, 255, 255), 1);*/
+
+			if (angle < 0) {
+				//cv::circle(drawing, farPoint, 4, cv::Scalar(0, 0, 255), 2);
+				//cv::circle(drawing, startPoint, 4, cv::Scalar(0, 255, 0), 2);
+				//cv::circle(drawing, endPoint, 4, cv::Scalar(0, 255, 0), 2);
+				convexPoint.push_back(startPoint);
+				convexPoint.push_back(endPoint);
+			}
+			/*else
+				cv::circle(drawing, farPoint, 4, cv::Scalar(255, 255, 255), 2);*/
+		}
+	}
+}
+
+void DepthActivator::clusterPoint(vector<cv::Point>& clusterInput, vector<cv::Point>& cluseterOutput)
+{
+	// calculate distance matrix
+	vector<vector<double>> distMat(clusterInput.size());
+	for (int i = 0; i < distMat.size(); i++) {
+		cv::Point pi = clusterInput[i];
+		distMat[i] = vector<double>(clusterInput.size());
+
+		for (int j = i + 1; j < distMat[i].size(); j++) {
+			cv::Point pj = clusterInput[j];
+			distMat[i][j] = sqrt(pow(pi.x - pj.x, 2) + pow(pi.y - pj.y, 2));
+		}
+	}
+
+	// cluster near point
+	vector<int> cluster(distMat.size(), 0);
+	int clusterCount = 1;
+	for (int i = 0; i < distMat.size(); i++) {
+		for (int j = i + 1; j < distMat[i].size(); j++) {
+			if (distMat[i][j] < DISTANCE_THRESHOLD) {
+				if (cluster[i] == 0 && cluster[j] == 0) {
+					cluster[i] = clusterCount;
+					cluster[j] = clusterCount;
+					clusterCount++;
+				}
+				else if (cluster[i] == 0) {
+					cluster[i] = cluster[j];
+				}
+				else {
+					cluster[j] = cluster[i];
+				}
+			}
+		}
+	}
+	// assign cluster to single point
+	for (int i = 0; i < cluster.size(); i++) {
+		if (cluster[i] == 0) {
+			cluster[i] = clusterCount;
+			clusterCount++;
+		}
+	}
+
+	// find centroid of each cluster
+	int m = cluster.size();
+	for (int i = 1; i < m - 1; i++) {
+		double x_sum = 0;
+		double y_sum = 0;
+		int x_count = 0;
+		int y_count = 0;
+		for (int j = 0; j < clusterInput.size(); j++) {
+			if (cluster[j] == i) {
+				x_sum += clusterInput[j].x;
+				y_sum += clusterInput[j].y;
+				y_count++;
+				x_count++;
+			}
+		}
+		if (x_count == 0) {
+			continue;
+		}
+		int x = (int)(x_sum / x_count);
+		int y = (int)(y_sum / y_count);
+		cv::Point p(x, y);
+		cluseterOutput.push_back(p);
 	}
 }
 

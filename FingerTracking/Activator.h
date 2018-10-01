@@ -7,7 +7,7 @@ public:
 	virtual void onPrepare() = 0;		// = 0 mean pure virtual function
 	virtual void onReadFrame() = 0;
 	virtual void onModifyFrame() = 0;
-	virtual void onMask(int signature, cv::Mat mask) = 0;
+	virtual void onMask(std::map<int, cv::Mat> masks) = 0;
 	virtual void onDraw(int signature, cv::Mat canvas) = 0;
 	virtual void onPerformKeyboardEvent(int key) = 0;
 	virtual void onDie() = 0;

@@ -33,11 +33,6 @@ void RGBDepthMaskCombiner::onCombine(map<int, cv::Mat> imageFrames)
 		largestContour = contours[maxIndex];
 		cv::cvtColor(imageFrame, imageFrame, cv::COLOR_GRAY2BGR);
 		cv::drawContours(mask, vector<vector<cv::Point>>{ largestContour }, 0, cv::Scalar(255, 255, 255), -1, 8, vector<cv::Vec4i>(), 0, cv::Point());
-		cv::convexHull(cv::Mat(largestContour), largestHull);
-		cv::cvtColor(mask, mask, cv::COLOR_GRAY2BGR);
-		cv::drawContours(mask, vector<vector<cv::Point>>{ largestHull }, 0, cv::Scalar(0, 255, 0), 2, 8, vector<cv::Vec4i>(), 0, cv::Point());
-		//cv::dilate(mask, mask, cv::Mat());
-		//cv::GaussianBlur(mask, mask, cv::Size(3, 3), 0);
 		imageFrame = mask;
 	}
 	else {

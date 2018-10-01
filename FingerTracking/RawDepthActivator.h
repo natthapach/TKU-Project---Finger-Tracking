@@ -14,7 +14,7 @@ public:
 	void onPrepare();
 	void onReadFrame();
 	void onModifyFrame();
-	void onMask(int signature, cv::Mat mask);
+	void onMask(std::map<int, cv::Mat> masks);
 	void onDraw(int signature, cv::Mat canvas);
 	void onPerformKeyboardEvent(int key);
 	void onDie();

@@ -70,7 +70,7 @@ void RawDepthActivator::onModifyFrame()
 	imageFrame = cv::Mat(480, 640, CV_8UC3, &img);
 }
 
-void RawDepthActivator::onMask(int signature, cv::Mat mask)
+void RawDepthActivator::onMask(std::map<int, cv::Mat> masks)
 {
 }
 

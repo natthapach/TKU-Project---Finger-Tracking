@@ -91,14 +91,11 @@ void RGBActivator::onModifyFrame()
 	//cv::dilate(skinMask, skinMask, kernel, cv::Point(-1, -1), 2);
 	cv::GaussianBlur(skinMask, skinMask, cv::Size(3, 3), 0);
 
-	cv::bitwise_not(skinMask, skinMask);
-	cv::cvtColor(skinMask, skinMask, cv::COLOR_GRAY2BGR);
-	cv::bitwise_and(imageFrame, skinMask, imageFrame);
 	//imageFrame = skinMask;
 	
 }
 
-void RGBActivator::onMask(int signature, cv::Mat mask)
+void RGBActivator::onMask(std::map<int, cv::Mat> masks)
 {
 }
 

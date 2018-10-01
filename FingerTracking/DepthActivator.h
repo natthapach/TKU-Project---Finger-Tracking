@@ -14,7 +14,7 @@ public:
 	void onPrepare();
 	void onReadFrame();
 	void onModifyFrame();
-	void onMask(int signature, cv::Mat mask);
+	void onMask(std::map<int, cv::Mat> masks);
 	void onDraw(int signature, cv::Mat canvas);
 	void onPerformKeyboardEvent(int key);
 	void onDie();
@@ -29,6 +29,7 @@ public:
 	void toggleEnableHandTracking();
 	void toggleEnableHandThreshold();
 	void toggleEnableDrawHandPoint();
+	void toggleEnableSkinMask();
 protected:
 	const int RANGE = 100;
 	const int DISTANCE_THRESHOLD = 10;
@@ -62,9 +63,16 @@ private:
 	bool enableHandTracking = true;
 	bool enableHandThreshold = false;
 	bool enableDrawHandPoint = false;
+	bool enableRGBSkinMask = true;
 	bool markMode = true;
 
 	void calDepthHistogram(openni::VideoFrameRef depthFrame, int* numberOfPoints, int* numberOfHandPoints);
 	void modifyImage(openni::VideoFrameRef depthFrame, int numberOfPoints, int numberOfHandPoints);
 	void settingHandValue();
+
+	void floodFillHand(cv::Mat& in);
+	void findHandContours(cv::Mat& in, vector<vector<cv::Point>>& contours, vector<cv::Point>& largestContour);
+	void findHandConvexHull(vector<cv::Point>& largestContour, vector<cv::Point>& largestHull, vector<int>& largestHull_I, vector<cv::Vec4i>& defects);
+	void findConvexPoint(vector<cv::Vec4i>& defects, vector<cv::Point>& convexPoint, vector<cv::Point>& largestContour);
+	void clusterPoint(vector<cv::Point>& clusterInput, vector<cv::Point>& cluseterOutput);
 };

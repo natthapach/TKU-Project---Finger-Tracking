@@ -68,9 +68,12 @@ int Application::start()
 		}
 		// onMask
 		for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
-			for (map<int, cv::Mat>::iterator it2 = maskFrames.begin(); it2 != maskFrames.end(); it2++) {
-				it->second->onMask(it2->first, it2->second);
-			}
+			it->second->onMask(maskFrames);
+		}
+
+		// Re-Read Activator Frame
+		for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
+			imageFrames[it->first] = it->second->getImageFrame();
 		}
 
 		// onDraw
