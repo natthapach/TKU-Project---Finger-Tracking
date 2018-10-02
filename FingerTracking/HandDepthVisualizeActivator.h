@@ -24,6 +24,8 @@ public:
 	int getSignature();
 protected:
 	const int RANGE = 100;
+	const int DISTANCE_THRESHOLD = 10;
+	const int IGNORE_LAYER1_THRESHOLD = 10;
 
 	nite::HandTracker handTracker;
 	openni::VideoStream videoStream;
