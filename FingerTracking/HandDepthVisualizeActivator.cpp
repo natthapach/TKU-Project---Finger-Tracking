@@ -351,6 +351,7 @@ void HandDepthVisualizeActivator::onMask(std::map<int, cv::Mat> masks)
 
 	float wx, wy, wz;
 	int px, py;
+	cv::Point handPoint(handPosX, handPosY);
 	openni::DepthPixel pz;
 	openni::CoordinateConverter::convertDepthToWorld(videoStream, handPosX, handPosY, handDepth, &wx, &wy, &wz);
 	openni::CoordinateConverter::convertWorldToDepth(videoStream, wx + 50, wy, wz, &px, &py, &pz);
@@ -361,16 +362,23 @@ void HandDepthVisualizeActivator::onMask(std::map<int, cv::Mat> masks)
 			rediusColor = cv::Scalar(0, 255, 255);
 		else
 			rediusColor = cv::Scalar(255, 255, 0);
-		cv::circle(maskL1, cv::Point(handPosX, handPosY), r, rediusColor, 2);
-		cv::circle(maskL2, cv::Point(handPosX, handPosY), r, rediusColor, 2);
-		cv::circle(maskL3, cv::Point(handPosX, handPosY), r, rediusColor, 2);
-		cv::circle(drawing, cv::Point(handPosX, handPosY), r, rediusColor, 2);
+		cv::circle(maskL1, handPoint, r, rediusColor, 2);
+		cv::circle(maskL2, handPoint, r, rediusColor, 2);
+		cv::circle(maskL3, handPoint, r, rediusColor, 2);
+		cv::circle(drawing, handPoint, r, rediusColor, 2);
 	}
 
-	cv::circle(maskL1, cv::Point(handPosX, handPosY), 4, cv::Scalar(255, 0, 255), 2);
-	cv::circle(maskL2, cv::Point(handPosX, handPosY), 4, cv::Scalar(255, 0, 255), 2);
-	cv::circle(maskL3, cv::Point(handPosX, handPosY), 4, cv::Scalar(255, 0, 255), 2);
-	cv::circle(drawing, cv::Point(handPosX, handPosY), 4, cv::Scalar(255, 0, 255), 2);
+	cv::circle(maskL1, handPoint, 4, cv::Scalar(255, 0, 255), 2);
+	cv::circle(maskL2, handPoint, 4, cv::Scalar(255, 0, 255), 2);
+	cv::circle(maskL3, handPoint, 4, cv::Scalar(255, 0, 255), 2);
+	cv::circle(drawing, handPoint, 4, cv::Scalar(255, 0, 255), 2);
+
+	for (int i = 0; i < fingerL2Cluster.size(); i++) {
+		cv::line(drawing, fingerL2Cluster[i], handPoint, cv::Scalar(255, 0, 255), 2);
+	}
+	for (int i = 0; i < fingerL1Abs.size(); i++) {
+		cv::line(drawing, fingerL1Abs[i], handPoint, cv::Scalar(255, 0, 255), 2);
+	}
 
 	imageFrame = depthFrame;
 
