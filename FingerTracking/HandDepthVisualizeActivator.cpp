@@ -376,8 +376,9 @@ void HandDepthVisualizeActivator::onDie()
 
 cv::Mat HandDepthVisualizeActivator::getImageFrame()
 {
-	if (numberOfHands > 0)
-		return maskFrame;
+	/*if (numberOfHands > 0)
+		return maskFrame;*/
+	cv::bitwise_and(imageFrame, imageFrame, imageFrame, maskFrame);
 	return imageFrame;
 }
 
