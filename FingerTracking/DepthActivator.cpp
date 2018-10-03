@@ -96,7 +96,7 @@ void DepthActivator::onModifyFrame()
 	imageFrame = gray;
 	return;
 
-	findHandContours(gray, contours, largestContour);
+	/*findHandContours(gray, contours, largestContour);
 
 	vector<int> largestHull_I;
 	vector<cv::Vec4i> defects;
@@ -115,7 +115,7 @@ void DepthActivator::onModifyFrame()
 	for (int i = 0; i < fingerPoint.size(); i++) {
 		cv::circle(drawing, fingerPoint[i], 2, cv::Scalar(255, 255, 2555), -1);
 	}
-	imageFrame = drawing;
+	imageFrame = drawing;*/
 }
 
 void DepthActivator::onMask(std::map<int, cv::Mat> masks)
