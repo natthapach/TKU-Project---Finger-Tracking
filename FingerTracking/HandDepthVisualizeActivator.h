@@ -45,6 +45,7 @@ protected:
 	int depthHistogram[65536];
 
 	cv::Mat imageFrame;
+	cv::Mat depthFrame;
 	cv::Mat maskFrame;
 	cv::Mat maskL1;
 	cv::Mat maskL2;

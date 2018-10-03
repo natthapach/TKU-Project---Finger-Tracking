@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Application.h"
 #include "Activator.h"
+#include "Constants.h"
 #include <vector>
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
@@ -85,7 +86,8 @@ int Application::start()
 
 		// Show Image
 		for (map<int, shared_ptr<Activator>>::iterator it = activators.begin(); it != activators.end(); it++) {
-			cv::imshow(it->second->getName(), imageFrames[it->first]);
+			if (it->first == ACTIVATOR_HAND_DEPTH_VISUALIZE)
+				cv::imshow(it->second->getName(), imageFrames[it->first]);
 			/*if (isWriteVideo)
 				videoWriters[]*/
 		}

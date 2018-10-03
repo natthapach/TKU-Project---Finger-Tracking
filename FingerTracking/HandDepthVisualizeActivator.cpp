@@ -78,7 +78,7 @@ void HandDepthVisualizeActivator::onReadFrame()
 	calDepthHistogram(depthFrame, &numberOfPoints, &numberOfHandPoints);
 	modifyImage(depthFrame, numberOfPoints, numberOfHandPoints);
 
-	imageFrame = cv::Mat(480, 640, CV_8UC3, &img);
+	this->depthFrame = cv::Mat(480, 640, CV_8UC3, &img);
 	maskFrame = cv::Mat(480, 640, CV_8UC1, &maskImg);
 	maskL1 = cv::Mat(480, 640, CV_8UC1, &m1);
 	maskL2 = cv::Mat(480, 640, CV_8UC1, &m2);
@@ -89,19 +89,34 @@ void HandDepthVisualizeActivator::onReadFrame()
 
 void HandDepthVisualizeActivator::onModifyFrame()
 {
+	if (numberOfHands <= 0) {
+		imageFrame = depthFrame;
+	}
+	else {
+		floodFillHand(maskFrame);
+		imageFrame = maskFrame;
+	}
+}
+
+void HandDepthVisualizeActivator::onMask(std::map<int, cv::Mat> masks)
+{
 	if (numberOfHands <= 0)
 		return;
 
 	cv::Mat drawing = cv::Mat::zeros(imageFrame.size(), CV_8UC3);
 	cv::Mat maskL1Corner;
-	floodFillHand(maskFrame);
+	/*floodFillHand(maskFrame);*/
+
+	if (masks.count(COMBINER_RGB_DEPTH) > 0) {
+		cv::bitwise_and(maskFrame, masks[COMBINER_RGB_DEPTH], maskFrame);
+	}
 	cv::cvtColor(maskFrame, drawing, cv::COLOR_GRAY2BGR);
 	cv::bitwise_and(maskL1, maskFrame, maskL1);
 	cv::bitwise_and(maskL2, maskFrame, maskL2);
 	cv::bitwise_and(maskL3, maskFrame, maskL3);
 	cv::Mat maskL1x;
 	cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3, 3));
-	//cv::dilate(maskL1, maskL1, kernel);
+	cv::dilate(maskL1, maskL1, kernel);
 	cv::GaussianBlur(maskL1, maskL1x, cv::Size(3, 3), 1);
 	//cv::addWeighted(maskL1, 2.0, maskL1x, -0.5, 0, maskL1x);
 	cv::cornerHarris(maskL1, maskL1Corner, 10, 5, 0.04, cv::BORDER_DEFAULT);
@@ -183,7 +198,7 @@ void HandDepthVisualizeActivator::onModifyFrame()
 			}
 		}
 	}
-	
+
 	if (maxArea != 0) {
 		cv::drawContours(maskL2, convexHull2, largestIndexL2, cv::Scalar(0, 255, 0), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
 	}
@@ -215,7 +230,7 @@ void HandDepthVisualizeActivator::onModifyFrame()
 			}
 		}
 	}
-	
+
 	//for (int i = 0; i < contours2.size(); i++) {
 	//	cv::drawContours(maskL2, contours2, i, cv::Scalar(0, 255, 0), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
 	//	cv::drawContours(maskL2, convexHull2, i, cv::Scalar(0, 255, 0), 1, 8, vector<cv::Vec4i>(), 0, cv::Point());
@@ -302,9 +317,9 @@ void HandDepthVisualizeActivator::onModifyFrame()
 			cv::Point p1 = points[i];
 			for (int j = 0; j < fingerL2Cluster.size(); j++) {
 				cv::Point p2 = fingerL2Cluster[j];
-				double d = sqrt(pow(p1.x-p2.x, 2) + pow(p1.y-p2.y, 2));
-				
-				if (d < IGNORE_LAYER1_THRESHOLD+5) {
+				double d = sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
+
+				if (d < IGNORE_LAYER1_THRESHOLD + 5) {
 					isIgnore = true;
 					break;
 				}
@@ -312,7 +327,8 @@ void HandDepthVisualizeActivator::onModifyFrame()
 			if (isIgnore) {
 				break;
 			}
-			double dc = sqrt(pow(p1.x-handPosX, 2) + pow(p1.y-handPosY, 2));
+			double dc = depthRaw[p1.y][p1.x];
+			//double dc = sqrt(pow(p1.x-handPosX, 2) + pow(p1.y-handPosY, 2));
 			if (dc < minV) {
 				minV = dc;
 				minI = i;
@@ -340,25 +356,28 @@ void HandDepthVisualizeActivator::onModifyFrame()
 	openni::CoordinateConverter::convertWorldToDepth(videoStream, wx + 50, wy, wz, &px, &py, &pz);
 	int r = abs(handPosX - px);
 	if (r > 0) {
-		cv::circle(maskL1, cv::Point(handPosX, handPosY), r, cv::Scalar(0, 255, 255), 2);
-		cv::circle(maskL2, cv::Point(handPosX, handPosY), r, cv::Scalar(0, 255, 255), 2);
-		cv::circle(maskL3, cv::Point(handPosX, handPosY), r, cv::Scalar(0, 255, 255), 2);
-		cv::circle(drawing, cv::Point(handPosX, handPosY), r, cv::Scalar(0, 255, 255), 2);
+		cv::Scalar rediusColor;
+		if (fingerL2Cluster.size() + fingerL1Abs.size() == 5)
+			rediusColor = cv::Scalar(0, 255, 255);
+		else
+			rediusColor = cv::Scalar(255, 255, 0);
+		cv::circle(maskL1, cv::Point(handPosX, handPosY), r, rediusColor, 2);
+		cv::circle(maskL2, cv::Point(handPosX, handPosY), r, rediusColor, 2);
+		cv::circle(maskL3, cv::Point(handPosX, handPosY), r, rediusColor, 2);
+		cv::circle(drawing, cv::Point(handPosX, handPosY), r, rediusColor, 2);
 	}
 
-	cv::circle(maskL1, cv::Point(handPosX, handPosY), 4, cv::Scalar(255, 255, 255), 2);
-	cv::circle(maskL2, cv::Point(handPosX, handPosY), 4, cv::Scalar(255, 255, 255), 2);
-	cv::circle(maskL3, cv::Point(handPosX, handPosY), 4, cv::Scalar(255, 255, 255), 2);
-	cv::circle(drawing, cv::Point(handPosX, handPosY), 4, cv::Scalar(255, 255, 255), 2);
+	cv::circle(maskL1, cv::Point(handPosX, handPosY), 4, cv::Scalar(255, 0, 255), 2);
+	cv::circle(maskL2, cv::Point(handPosX, handPosY), 4, cv::Scalar(255, 0, 255), 2);
+	cv::circle(maskL3, cv::Point(handPosX, handPosY), 4, cv::Scalar(255, 0, 255), 2);
+	cv::circle(drawing, cv::Point(handPosX, handPosY), 4, cv::Scalar(255, 0, 255), 2);
 
-	cv::imshow("mask1", maskL1);
-	cv::imshow("mask2", maskL2);
-	cv::imshow("mask3", maskL3);
+	imageFrame = depthFrame;
+
+	//cv::imshow("mask1", maskL1);
+	//cv::imshow("mask2", maskL2);
+	//cv::imshow("mask3", maskL3);
 	cv::imshow("drawing", drawing);
-}
-
-void HandDepthVisualizeActivator::onMask(std::map<int, cv::Mat> masks)
-{
 }
 
 void HandDepthVisualizeActivator::onDraw(int signature, cv::Mat canvas)

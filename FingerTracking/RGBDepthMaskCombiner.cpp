@@ -5,9 +5,21 @@
 
 void RGBDepthMaskCombiner::onCombine(map<int, cv::Mat> imageFrames)
 {
-	cv::Mat depthFrame = imageFrames[ACTIVATOR_DEPTH];
-	cv::Mat rgbFrame = imageFrames[ACTIVATOR_RGB];
+	cv::Mat depthFrame;
+	cv::Mat rgbFrame;
 	cv::Mat res;
+
+	if (imageFrames.count(ACTIVATOR_RGB) > 0 && imageFrames.count(ACTIVATOR_DEPTH) > 0) {
+		depthFrame = imageFrames[ACTIVATOR_DEPTH];
+		rgbFrame = imageFrames[ACTIVATOR_RGB];
+	}
+	else if (imageFrames.count(ACTIVATOR_RGB) > 0 && imageFrames.count(ACTIVATOR_HAND_DEPTH_VISUALIZE) > 0) {
+		depthFrame = imageFrames[ACTIVATOR_HAND_DEPTH_VISUALIZE];
+		rgbFrame = imageFrames[ACTIVATOR_RGB];
+	}
+	else {
+		return;
+	}
 
 	if (depthFrame.type() == CV_8UC1 && rgbFrame.type() == CV_8UC1) {
 		cv::bitwise_and(depthFrame, rgbFrame, imageFrame);
